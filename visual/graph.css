@@ -1,0 +1,79 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#graph {
+    z-index: 0;
+    
+}
+
+#tooltip {
+    display: none;
+    position: absolute;
+    z-index: 2;
+    background-color: white;
+    border-radius: 2px;
+    border-color: #333;
+    border: solid;
+    border-width: thin;
+    padding: 8px;
+
+    margin: 0;
+    overflow: hidden;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+
+#tooltip p {
+    margin: 0;
+    font-size: 14px;
+    overflow: hidden;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+
+.slidecontainer {
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: absolute;
+    z-index: 1;
+    padding: 16px;
+}
+
+#numberOfNodesSlider {
+    width: 50%;
+}
+
+.saveAsPNGContainer {
+	width: 100px;
+	height: 40px;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: absolute;
+    z-index: 1;
+    padding: 16px;
+}
