@@ -40,22 +40,24 @@ cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 + Write the annotation visualization to file graph-data-generated.js that should be moved to the provided 'visual' folder and open the 'graph.html' in a browser.
 + Collapse the tree by lineages and write this collapsed tree to file [#lineages]_collapsedTree.nwk.
 + Remove inconsistent taxa and write this pruned tree to file [#consistent_taxa]_removedTree.nwk (used for tree refinement using other phylogenetic insertion methods, e.g., UShER).
-+ Write the inconsistent taxa names and their lineages to file [#inconsistent_taxa]_unKeepSamples_[#consistent_taxa]_tree.tsv (used for tree refinement using other phylogenetic insertion methods, e.g., UShER).
++ Write the inconsistent taxa names and their lineages to file [#inconsistent_taxa]_unKeepSamples_[#consistent_taxa]_tree.tsv.
 
 ## Tree refinement
-### Phylogenetic insertion using TIPars (include processing tree annotation)
+### Phylogenetic insertion using TIPars
++ include processing tree annotation
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 /home/ytye/tipars2_github/tipars2 --refinement -t 100k_tree_InnodeNameAdded.nwk -s 100k_taxa.fas -a 100k_anc.fas --label 100k_pangolin.tsv --output refined_tree.nwk -T 8 -x 8G
 ```
 
-### Phylogenetic insertion using TIPars (exclude processing tree annotation that could be computed by other methods, e.g. PastML and matUtils)
++  exclude processing tree annotation that could be computed by other methods, e.g. PastML and matUtils
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 /home/ytye/tipars2_github/tipars2 --refinement_from_annotation -t 100k_tree_InnodeNameAdded.nwk -s 100k_taxa.fas -a 100k_anc.fas --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output refined_tree.nwk -T 8 -x 8G
 ```
 
-### Phylogenetic insertion using UShER (using the [#consistent_taxa]_removedTree.nwk after tree annotation by TIPars2)
+### Phylogenetic insertion using UShER 
++  use the [#consistent_taxa]_removedTree.nwk after tree annotation by TIPars2
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 /home/ytye/tipars2_github/tipars2 --annotation -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 1248_in_100k_annotation.tsv -T 8
