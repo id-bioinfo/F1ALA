@@ -244,13 +244,13 @@ public class TIPars {
 			double pqlen = 0.0;
 			if (selectedScores[2] <= MinDoubleNumLimit)
 				pqlen = 0.0;
-			else // selectedScores[2] > Double.MIN_VALUE
+			else /// selectedScores[2] > Double.MIN_VALUE
 			{
 				double scoreAB = computeNodeScore(nodeAseq, nodeBseq);
 				FlexibleNode myNodeB = selectedNode;
 				FlexibleNode myNodeA = myNodeB.getParent();
-				// iteratively consider upper branch of A parent to A for scaling if
-				// selectedScores[2] > Double.MIN_VALUE and scoreAB <= MinDoubleNumLimit.
+				/// iteratively consider upper branch of A’s parent to A for scaling if
+				/// selectedScores[2] > Double.MIN_VALUE and scoreAB <= MinDoubleNumLimit.
 				while ((scoreAB <= MinDoubleNumLimit || myNodeB.getLength() <= MinDoubleNumLimit)
 						&& !myNodeA.isRoot()) {
 					myNodeB = myNodeA;
@@ -3178,12 +3178,12 @@ public class TIPars {
 		return sortedSamples;
 	}
 	
-	public Tree treeRefinement(Tree removedTree, HashMap<String, String> assignmentMap, HashMap<String, String> addSample2Clades, Integer index4Insertion, boolean printDisInfoOnScreen, String informat) throws IOException, ImportException
+	public Tree treeRefinement(Tree removedTree, HashMap<String, String> assignmentMap, HashMap<String, String> addSample2Clades, Integer index4Insertion, boolean printDisInfoOnScreen, String informat, String checkPoint_prefix) throws IOException, ImportException
 	{
-		return treeRefinement(removedTree, assignmentMap, addSample2Clades, index4Insertion, false, printDisInfoOnScreen, informat);
+		return treeRefinement(removedTree, assignmentMap, addSample2Clades, index4Insertion, false, printDisInfoOnScreen, informat, checkPoint_prefix);
 	}
 	
-	public Tree treeRefinement(Tree removedTree, HashMap<String, String> assignmentMap, HashMap<String, String> addSample2Clades, Integer index4Insertion, boolean stillInsert, boolean printDisInfoOnScreen, String informat) throws IOException, ImportException
+	public Tree treeRefinement(Tree removedTree, HashMap<String, String> assignmentMap, HashMap<String, String> addSample2Clades, Integer index4Insertion, boolean stillInsert, boolean printDisInfoOnScreen, String informat, String checkPoint_prefix) throws IOException, ImportException
 	{
 		this.mytree = removedTree;
 		setupHashtableOfnode2seqName();
@@ -3218,18 +3218,18 @@ public class TIPars {
 				index4Insertion++;
 				
 				//checkpoint to store the current outtree and remaining samples to be added
-				if(i % 1000 == 999 || i == 0)
+				if(checkPoint_prefix != "" && (i % 1000 == 999 || i == 0))
 				{
-					String outTreePath = OUTPUT_FOLDER  + "/runs/checkpoint_addedTree.nwk";
+					String outTreePath = OUTPUT_FOLDER  + "/" + checkPoint_prefix + "_addedTree.nwk";
 					writeToTree(outtree, outTreePath, "refinement");
-					String outFilePath = OUTPUT_FOLDER + "/runs/checkpoint_remainingSeqName.txt";
+					String outFilePath = OUTPUT_FOLDER + "/" + checkPoint_prefix + "_remainingSeqName.txt";
 					ArrayList<String> remainingSeqName = new ArrayList<String>();
 					for(int j = 0; j < i; ++j) remainingSeqName.add(sortedSamples.get(j));
 					writeSeqName(outFilePath, remainingSeqName);
 					
 					if(informat.contains("fasta"))
 					{
-						String outFASTAFilePath = OUTPUT_FOLDER + "/runs/checkpoint_addedInternodeQ.fasta";
+						String outFASTAFilePath = OUTPUT_FOLDER + "/" + checkPoint_prefix + "_addedInternodeQ.fasta";
 						ArrayList<String> desc = new ArrayList<String>();
 						ArrayList<String> seq = new ArrayList<String>();
 						for(HashMap.Entry<String, Integer> entry : seqIdxMap.entrySet()) {
@@ -3386,7 +3386,7 @@ public class TIPars {
 		Integer index4Insertion = 0;
 		if(checkPoint_prefix != "")
 		{
-			String inTreePath = OUTPUT_FOLDER  + "/runs/" + checkPoint_prefix + "_addedTree.nwk";
+			String inTreePath = OUTPUT_FOLDER  + "/" + checkPoint_prefix + "_addedTree.nwk";
 			Tree intree;
 			try {
 				NewickImporter intni = new NewickImporter(new FileReader(inTreePath));
@@ -3399,12 +3399,12 @@ public class TIPars {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			String inFilePath = OUTPUT_FOLDER + "/runs/" + checkPoint_prefix + "_remainingSeqName.txt";
+			String inFilePath = OUTPUT_FOLDER + "/" + checkPoint_prefix + "_remainingSeqName.txt";
 			ArrayList<String> innames = readSeqName(inFilePath);
 		
 			if(informat.contains("fasta"))
 			{
-				String inFASTAFilePath = OUTPUT_FOLDER + "/runs/" + checkPoint_prefix + "_addedInternodeQ.fasta";
+				String inFASTAFilePath = OUTPUT_FOLDER + "/" + checkPoint_prefix + "_addedInternodeQ.fasta";
 				readFastaAlignmentFile(inFASTAFilePath);
 			}
 			
@@ -3429,7 +3429,7 @@ public class TIPars {
 		Tree outtree = null;
 		try
 		{
-			outtree = treeRefinement(removedTree, nodename2clade, removedSampleAndClades, index4Insertion, true, printDisInfoOnScreen, informat); //tree refinement
+			outtree = treeRefinement(removedTree, nodename2clade, removedSampleAndClades, index4Insertion, true, printDisInfoOnScreen, informat, checkPoint_prefix); //tree refinement
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -3553,7 +3553,7 @@ public class TIPars {
 	}
 	
 	//only keep correct inserted samples in the tree that will do the TreeRefinement iteratively
-	public Tree doTreeRefinement_iteration(HashMap<String, ArrayList<String>> clade2samples, String informat, boolean printDisInfoOnScreen, HashMap<String, String> nodename2clade, int iteration)
+	public Tree doTreeRefinement_iteration(HashMap<String, ArrayList<String>> clade2samples, String informat, boolean printDisInfoOnScreen, HashMap<String, String> nodename2clade, int iteration, String checkPoint_prefix)
 	{
 		if (nodename2clade == null) nodename2clade = treeAnnotation(clade2samples, 0, printDisInfoOnScreen); //tree annotation, F-Scoree = 0
 
@@ -3578,7 +3578,7 @@ public class TIPars {
 			try
 			{
 				//only keep correct inserted samples in the tree
-				outtree = treeRefinement(removedTree, nodename2clade, removedSampleAndClades, index4Insertion, printDisInfoOnScreen, informat); //tree refinement
+				outtree = treeRefinement(removedTree, nodename2clade, removedSampleAndClades, index4Insertion, printDisInfoOnScreen, informat, checkPoint_prefix); //tree refinement
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -3628,7 +3628,7 @@ public class TIPars {
 				{
 					///keep the inconsistent and unassigned samples in the tree
 					try {
-						outtree = treeRefinement(removedTree, nodename2clade, removedSampleAndClades, index4Insertion, true, printDisInfoOnScreen, informat);
+						outtree = treeRefinement(removedTree, nodename2clade, removedSampleAndClades, index4Insertion, true, printDisInfoOnScreen, informat, checkPoint_prefix);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -4093,7 +4093,7 @@ public class TIPars {
 	            if(aa_flag) _used_scoreTable = _aminoacid_scoreTable;
 			}
 			
-			if((otype.equals("refinement") || otype.equals("refinement_from_annotation") || otype.equals("insertion")) && informat.equals("fasta"))
+			if((otype.equals("refinement") || otype.equals("refinement_from_annotation")) && informat.equals("fasta"))
 			{
 				if(!args[args.length - 4].equals("false")) checkpoint_prefix = args[args.length - 4];
 			}

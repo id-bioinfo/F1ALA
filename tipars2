@@ -21,7 +21,7 @@ parser.add_argument("-q", "--query", help="fasta/vcf file contains one or multip
 parser.add_argument("-f", "--format", default="fasta", help="one of 'fasta', 'vcf'")
 parser.add_argument("-m", "--multiplacement", default="true", help="one of 'true', 'false'")
 parser.add_argument("-aa", action="store_true", help="TIPars excpets nucleotides by default, use -aa for protein")
-parser.add_argument("-cp", "--checkpoint", default="tipars_checkpoint", help="checkpoint prefix filename for insertion/refinement, only for using fasta format")
+parser.add_argument("-cp", "--checkpoint", default="false", help="checkpoint prefix filename for refinement, only for using fasta format; default no checkpoint")
 parser.add_argument("-o", "--output", default="TIPars.output", help="outputfile: a tree (insertion/refinment), jplace (placement), tsv (annotation/annotation_details)")
 parser.add_argument("-ps", "--print2screen", default="false", help="one of 'true', 'false'(default)")
 parser.add_argument("-T", "--threads", default="8", help="number of threads (default = 8), 0 is using all available threads")
