@@ -1,4 +1,4 @@
-Manifest-Version: 1.1.0
-Developed-By: Yongtao Ye, Marcus Shum, Joseph Tsui, Guangchuang Yu, Tommy Lam
+Manifest-Version: 2.0.0
+Developed-By: Yongtao Ye
 Class-Path: lib/beast.jar lib/gson-2.8.5.jar
 Main-Class: TIPars
