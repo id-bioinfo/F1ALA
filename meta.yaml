@@ -7,6 +7,7 @@ package:
   files:
     - TIPars2.jar
     - lib/*
+    - tipars2.py
     - tipars2
     - visual/*
   name: tipars2
@@ -14,11 +15,12 @@ package:
 source:
   path: /mnt/c/Users/user/documents/isaac/TIPars2
 build:
-  number: '4'
+  number: '5'
   script:
     - mkdir -p $PREFIX/bin
     - cp $RECIPE_DIR/TIPars2.jar $PREFIX/bin/
     - cp $RECIPE_DIR/tipars2 $PREFIX/bin/
+    - cp $RECIPE_DIR/tipars2.py $PREFIX/bin/
     - mkdir -p $PREFIX/bin/lib
     - cp $RECIPE_DIR/lib/* $PREFIX/bin/lib/
     - mkdir -p $PREFIX/bin/visual
