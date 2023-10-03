@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-dispatch@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-quadtree@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-timer@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-force@3"></script>
+	<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <link href="graph.css" rel="stylesheet"></link>
+</head>
+<body>
+    <div id="graph"></div>
+    <div id="tooltip"></div>
+    <div class="slidecontainer">
+        <div>
+            <label>Number of the largest node(s): </label>
+            <label id="numberOfNodesThreshold"></label>
+        </div>
+        <input type="range" min="1" max="1000" value="1000" class="slider" id="numberOfNodesSlider">
+    </div>
+	<div class="saveAsPNGContainer">
+		<button type="button" id="saveAsPNGButton">Save as PNG</button>
+	</div>
+    <script src="graph-data-generated.js"></script>
+    <script src="graph.js"></script>
+</body>
+</html>

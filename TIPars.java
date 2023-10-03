@@ -37,7 +37,9 @@ import dr.evolution.tree.Tree;
 import dr.evolution.util.Taxon;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.stream.Stream;
@@ -3874,12 +3876,14 @@ public class TIPars {
 				for (String sample : samples) {
 					sample2Clade.put(sample, clade);
 				}
-				clade2NumberOfSamples.put(clade, samples.size());
+				int sampleSize = samples.size();
+				clade2NumberOfSamples.put(clade, sampleSize);
+				this.totalSamplesCount += sampleSize;
 			}
 			this.clade2NumberOfSamples = clade2NumberOfSamples;
 			this.sample2Clade = sample2Clade;
-			System.out.println("this.totalSamplesCount=" + this.totalSamplesCount);
 		}
+		
 		public void parseLine(String line) throws Exception {
 			String[] words = line.split("\t");
 			if (words.length != 6) {
@@ -3988,6 +3992,39 @@ public class TIPars {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void copyStaticWebFiles(String output_dir) {
+		final String currentJarPath = TIPars.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		final File jarFile = new File(currentJarPath);
+		final String jarDir = jarFile.getParentFile().getAbsolutePath();
+		final String refinedOutputPath = output_dir.isEmpty() ? "." : output_dir;
+		System.out.println("jarDir :" + jarDir);
+		System.out.println("output_dir :" + output_dir);
+		try {
+			copyFiles(jarDir + "/visual/graph.html", refinedOutputPath + "/graph.html");
+			copyFiles(jarDir + "/visual/graph.css", refinedOutputPath + "/graph.css");
+			copyFiles(jarDir + "/visual/graph.js", refinedOutputPath + "/graph.js");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void copyFiles(String originalPath, String targetPath) {
+		try {
+			FileInputStream fis = new FileInputStream(originalPath);
+			System.out.println("hi");
+			FileOutputStream fos = new FileOutputStream(new File(targetPath));
+			System.out.println("hi2");
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                fos.write(buffer, 0, bytesRead);
+            }
+			System.out.println("Copied " + originalPath + " to " + "targetPath");
+        } catch (IOException e) {
+            System.err.println("Failed to copy files: " + e.getMessage());
+        }
 	}
 	
 	public static String changeFileExtension(String fileName, String newExtension) {
@@ -4311,6 +4348,7 @@ public class TIPars {
 					outfn,
 					clade2samples
 				);
+				copyStaticWebFiles(output_folder);
 				System.out.println("INFO: write annotation visualization (without unannotated samples) to file " + JSON_OUTPUT_FILE_PATH);
 				System.out.println("INFO: please move the json file under the provided 'visual' folder and click the 'graph.html' for visualization." );
 			}

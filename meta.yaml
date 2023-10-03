@@ -1,0 +1,37 @@
+# This file created by conda-build 3.26.1
+# meta.yaml template originally from:
+# Origin b'https://github.com/id-bioinfo/TIPars.git', commit b'99fecc954878679f31f05162c136d483884772cf'
+# ------------------------------------------------
+
+package:
+  files:
+    - TIPars2.jar
+    - lib/*
+    - tipars2
+    - visual/*
+  name: tipars2
+  version: '1.0'
+source:
+  path: /mnt/c/Users/user/documents/isaac/TIPars2
+build:
+  number: '1'
+  script:
+    - mkdir -p $PREFIX/bin
+    - cp $RECIPE_DIR/TIPars2.jar $PREFIX/bin/
+    - cp $RECIPE_DIR/tipars2 $PREFIX/bin/
+    - mkdir -p $PREFIX/bin/lib
+    - cp $RECIPE_DIR/lib/* $PREFIX/bin/lib/
+    - mkdir -p $PREFIX/bin/visual
+    - cp $RECIPE_DIR/visual/* $PREFIX/bin/visual/
+requirements:
+  build: []
+  run:
+    - openjdk=11
+test:
+  commands:
+    - echo "Success"
+about:
+  home: https://github.com/id-bioinfo/TIPars
+extra:
+  copy_test_source_files: true
+  final: true
