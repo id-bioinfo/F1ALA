@@ -20,6 +20,15 @@ cd TIPars2
 make
 ```
 
+For conda installation, 
+```bash
+conda create -n tipars
+conda activate tipars
+conda config --add channels yongtaotipars
+conda install tipars2
+tipars2 -h
+```
+
 # Quick Usage
 
 ## Pango lineage annotation

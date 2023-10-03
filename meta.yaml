@@ -14,7 +14,7 @@ package:
 source:
   path: /mnt/c/Users/user/documents/isaac/TIPars2
 build:
-  number: '1'
+  number: '4'
   script:
     - mkdir -p $PREFIX/bin
     - cp $RECIPE_DIR/TIPars2.jar $PREFIX/bin/

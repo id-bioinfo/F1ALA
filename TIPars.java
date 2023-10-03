@@ -3999,8 +3999,6 @@ public class TIPars {
 		final File jarFile = new File(currentJarPath);
 		final String jarDir = jarFile.getParentFile().getAbsolutePath();
 		final String refinedOutputPath = output_dir.isEmpty() ? "." : output_dir;
-		System.out.println("jarDir :" + jarDir);
-		System.out.println("output_dir :" + output_dir);
 		try {
 			copyFiles(jarDir + "/visual/graph.html", refinedOutputPath + "/graph.html");
 			copyFiles(jarDir + "/visual/graph.css", refinedOutputPath + "/graph.css");
@@ -4013,15 +4011,12 @@ public class TIPars {
 	public static void copyFiles(String originalPath, String targetPath) {
 		try {
 			FileInputStream fis = new FileInputStream(originalPath);
-			System.out.println("hi");
 			FileOutputStream fos = new FileOutputStream(new File(targetPath));
-			System.out.println("hi2");
             byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = fis.read(buffer)) != -1) {
                 fos.write(buffer, 0, bytesRead);
             }
-			System.out.println("Copied " + originalPath + " to " + "targetPath");
         } catch (IOException e) {
             System.err.println("Failed to copy files: " + e.getMessage());
         }
@@ -4350,7 +4345,7 @@ public class TIPars {
 				);
 				copyStaticWebFiles(output_folder);
 				System.out.println("INFO: write annotation visualization (without unannotated samples) to file " + JSON_OUTPUT_FILE_PATH);
-				System.out.println("INFO: please move the json file under the provided 'visual' folder and click the 'graph.html' for visualization." );
+				System.out.println("INFO: please click the 'graph.html' in the output folder for visualization." );
 			}
 			else if (otype.equals("refinement"))
 			{
