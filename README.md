@@ -30,7 +30,7 @@ conda install tipars2
 
 # Quick Usage
 
-## Pango lineage annotation
+## Ancestral lineage annotation
 
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
@@ -52,20 +52,20 @@ cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 
 ## Tree refinement
 ### Phylogenetic insertion using TIPars
-+ include processing tree annotation
++ include processing ancestral lineage annotation
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 /home/ytye/tipars2_github/tipars2 --refinement -t 100k_tree_InnodeNameAdded.nwk -s 100k_taxa.fas -a 100k_anc.fas --label 100k_pangolin.tsv --output refined_tree.nwk -T 8 -x 8G
 ```
 
-+  exclude processing tree annotation that could be computed by other methods, e.g. PastML and matUtils
++  exclude processing ancestral lineage annotation that could be computed by other methods, e.g. PastML and matUtils
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 /home/ytye/tipars2_github/tipars2 --refinement_from_annotation -t 100k_tree_InnodeNameAdded.nwk -s 100k_taxa.fas -a 100k_anc.fas --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output refined_tree.nwk -T 8 -x 8G
 ```
 
 ### Phylogenetic insertion using UShER 
-+  use the [#consistent_taxa]_removedTree.nwk after tree annotation by TIPars2
++  use the [#consistent_taxa]_removedTree.nwk after ancestral lineage annotation by TIPars2
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 /home/ytye/tipars2_github/tipars2 --annotation -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 1248_in_100k_annotation.tsv -T 8
@@ -80,7 +80,7 @@ usher -v taxa.vcf -t 81784_removedTree.tree -d ./usher -o ./usher/81784_AddTo_10
 
 # Acknowledgements
 
-This project is supported by the Hong Kong Research Grants Council General Research Fund (17150816), the NSFC Excellent Young Scientists Fund (Hong Kong and Macau) (31922087),
+This project is supported by the Theme Based Research Scheme (T11-705/21-N), the Hong Kong Research Grants Council General Research Fund (17150816), the NSFC Excellent Young Scientists Fund (Hong Kong and Macau) (31922087),
 the Health and Medical Research Fund (COVID1903011-549 WP1) and the Innovation and Technology Commission’s InnoHK funding (D<sup>2</sup>4H).
 
 
