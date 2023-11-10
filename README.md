@@ -74,6 +74,13 @@ usher -v taxa.vcf -t 81784_removedTree.tree -d ./usher -o ./usher/81784_AddTo_10
 ```
 + The refined tree by UShER is ./usher/final-tree.nh.
 
+## Tree 
+
+```bash
+cd /home/ytye/tipars2_github/Benchmark_datasets/100k
+/home/ytye/tipars2_github/tipars2 --annotation -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 1248_in_100k_annotation.tsv -T 8 
+```
+
 # How to Cite
 
 
