@@ -74,11 +74,14 @@ usher -v taxa.vcf -t 81784_removedTree.tree -d ./usher -o ./usher/81784_AddTo_10
 ```
 + The refined tree by UShER is ./usher/final-tree.nh.
 
-## Tree 
+## Tree bubbling
+Collapse the tree into multiple clusters based on the ancestal lineage annotation.
+Large clusters (>exploreTreeNodeLimit) will further to stratify into multple bubbles by BFS search.
+Small clusters (<smallClusterLimit) and bubbles (<smallBubbleLimit) will be merged.
 
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
-/home/ytye/tipars2_github/tipars2 --annotation -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 1248_in_100k_annotation.tsv -T 8 
+/home/ytye/tipars2_github/tipars2 --tree_BFS -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 100k_tree_bfs.tsv --exploreTreeNodeLimit 2000 --smallBubbleLimit 5 --smallClusterLimit 5 -T 8 
 ```
 
 # How to Cite
