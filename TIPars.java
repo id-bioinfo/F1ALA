@@ -19,7 +19,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
@@ -47,6 +49,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.charset.StandardCharsets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 
 public class TIPars {
 
@@ -168,6 +171,21 @@ public class TIPars {
 			mySeqNames.add(n.getTaxon().getId());
 		}
 		return mySeqNames;
+	}
+	
+	private static HashMap<FlexibleNode, String> setupNode2seqName(Tree mytree) {
+		HashMap<FlexibleNode, String> mynode2seqName = new HashMap<FlexibleNode, String>();
+		for (int i = 0; i < mytree.getInternalNodeCount(); i++) {
+			FlexibleNode n = (FlexibleNode) mytree.getInternalNode(i);
+			String sequenceName = (String) (n.getAttribute(internalnode_nidname));
+			mynode2seqName.put(n, sequenceName);
+		}
+		for (int i = 0; i < mytree.getExternalNodeCount(); i++) {
+			FlexibleNode n = (FlexibleNode) mytree.getExternalNode(i);
+			String sequenceName = n.getTaxon().getId();
+			mynode2seqName.put(n, sequenceName);
+		}
+		return mynode2seqName;
 	}
 	
 	// Interface API
@@ -470,9 +488,11 @@ public class TIPars {
 				ABQ_brlen[2] = pqlen;
 			}
 			else if (selectedScores[1] <= MinDoubleNumLimit) {
+			 
 				ABQ_brlen[0] = original_branchAB;
 				ABQ_brlen[1] = 0.0;
 				ABQ_brlen[2] = pqlen;
+			 
 			} else {
 				double Pratio = selectedScores[0] / ((double) (selectedScores[0] + selectedScores[1]));
 				double newNodePLength = original_branchAB * Pratio;
@@ -544,8 +564,10 @@ public class TIPars {
 					selected_nodeA.removeChild(selected_nodeB);
 					selected_nodeP.addChild(selected_nodeB);
 				} else {
+					  
 					selected_nodeB.addChild(selected_nodeQ);
-				}
+				 
+				}								  
 			} else {
 				selected_nodeP.setLength(ABQ_brlen[0]);
 				selected_nodeB.setLength(ABQ_brlen[1]);
@@ -623,13 +645,14 @@ public class TIPars {
 
 		double original_branchAB = selectedNode.getLength();
 		double[] ABQ_brlen = {0,0,0};
-		if (selectedScores[1] <= MinDoubleNumLimit) {
-			ABQ_brlen[0] = original_branchAB;
-			ABQ_brlen[1] = 0.0;
-			ABQ_brlen[2] = pqlen;
-		} else if (selectedScores[0] <= MinDoubleNumLimit) {
+		if (selectedScores[0] <= MinDoubleNumLimit) {
 			ABQ_brlen[0] = 0.0;
 			ABQ_brlen[1] = original_branchAB;
+			ABQ_brlen[2] = pqlen;
+		}
+		else if (selectedScores[1] <= MinDoubleNumLimit) {
+			ABQ_brlen[0] = original_branchAB;
+			ABQ_brlen[1] = 0.0;
 			ABQ_brlen[2] = pqlen;
 		} else {
 			double Pratio = selectedScores[0] / ((double) (selectedScores[0] + selectedScores[1]));
@@ -2921,7 +2944,7 @@ public class TIPars {
 		public ArrayList<String> SampleList = new ArrayList<String>();
 	}
 	
-	public HashMap<FlexibleNode, ScoreAndStringList> annotationStatistics(HashMap<String, ArrayList<String>> clade2samples, HashMap<FlexibleNode, String> assignmentNode2Clade, HashMap<String, FlexibleNode> seqName2node, HashSet<String> taxaNames, boolean printDisInfoOnScreen) {
+	public HashMap<FlexibleNode, ScoreAndStringList> annotationStatistics(HashMap<String, ArrayList<String>> clade2samples, HashMap<FlexibleNode, String> assignmentNode2Clade, HashMap<String, FlexibleNode> seqName2node, HashSet<String> taxaNames, boolean printDisInfoOnScreen, boolean output_CollapsedTree_ConsistentTree) {
 		///statistic
 		int truePossitive = 0;
 		int assignedSamples = 0;
@@ -3050,10 +3073,12 @@ public class TIPars {
 		}
 		
 		//write out the consistent label tree and inconsistent samples
-		getConsistentLabelTree(clade2samples, printDisInfoOnScreen, assignmentNode2Clade);
+		if(output_CollapsedTree_ConsistentTree)
+			getConsistentLabelTree(clade2samples, printDisInfoOnScreen, assignmentNode2Clade);
 		
 		//write out the annotation collapsed tree
-		getCollapsedTree(assignmentNode2Clade);
+		if(output_CollapsedTree_ConsistentTree)
+			getCollapsedTree(assignmentNode2Clade);
 		
 		return assignedNode2Samples;	
 	}
@@ -4033,6 +4058,447 @@ public class TIPars {
         return fileName + "." + newExtension;
 	}
 
+	
+	private static HashMap<FlexibleNode, HashMap<String, HashSet<String>>> stratifyTree(Tree mytree, HashMap<FlexibleNode, ScoreAndStringList> id2PajekVectix, int exploreTreeNodeLimit, int smallBubbleLimit, int smallClusterLimit, HashMap<String, FlexibleNode> seqName2node) 
+	{
+		HashMap<FlexibleNode, HashMap<String, HashSet<String>>> stratification4eachVectix = new HashMap<FlexibleNode, HashMap<String, HashSet<String>>>();
+		HashMap<FlexibleNode, ScoreAndStringList> small_id2PajekVectix = new HashMap<FlexibleNode, ScoreAndStringList>();
+		HashMap<FlexibleNode, Integer> internalNodeSeqName2Idx = new HashMap<FlexibleNode, Integer>();
+		HashMap<FlexibleNode, Integer> externalNodeSeqName2Idx = new HashMap<FlexibleNode, Integer>();
+		for (int i = 0; i < mytree.getInternalNodeCount(); i++) {
+			FlexibleNode n = (FlexibleNode) mytree.getInternalNode(i);
+			internalNodeSeqName2Idx.put(n, i);
+		}
+		for (int i = 0; i < mytree.getExternalNodeCount(); i++) {
+			FlexibleNode n = (FlexibleNode) mytree.getExternalNode(i);
+			externalNodeSeqName2Idx.put(n, i);
+		}
+		
+		//entry.getValue().nodeList.size() >= smallBubbleLimit
+		for(Entry<FlexibleNode, ScoreAndStringList> entry : id2PajekVectix.entrySet())
+		{
+			if(entry.getValue().SampleList.size() > smallClusterLimit)
+			{
+				HashMap<String, HashSet<String>> stratification = stratifyTreeByNode(mytree, entry, exploreTreeNodeLimit, smallBubbleLimit, seqName2node, internalNodeSeqName2Idx, externalNodeSeqName2Idx);
+				if(stratification != null) stratification4eachVectix.put(entry.getKey(), stratification);
+			}
+			else
+			{
+				small_id2PajekVectix.put(entry.getKey(), entry.getValue());
+			}
+		}
+		
+		//merge small_id2PajekVectix (un-stratify) to stratification4eachVectix (already stratify)
+		//based on the minimum distance to the already setted bubbles which are their ancestors
+		for(Entry<FlexibleNode, ScoreAndStringList> entry : small_id2PajekVectix.entrySet())
+		{
+			String bubbleId = node2seqName.get(entry.getKey());
+			FlexibleNode bubble_node = entry.getKey();
+			FlexibleNode bubble_node_setted_select_vertixId = null;
+			String bubble_node_setted_select_bubbleId = null;
+			double min_distance = 10000;
+			
+			ArrayList<String> ancestors = getAncestors(bubble_node, (FlexibleNode)mytree.getRoot());
+			ancestors.add(node2seqName.get((FlexibleNode)mytree.getRoot()));
+			HashSet<String> ancestors_set = new HashSet<String>(ancestors);
+			
+			for(Entry<FlexibleNode, HashMap<String, HashSet<String>>> entry1 : stratification4eachVectix.entrySet())
+			{
+				if(entry1.getValue() == null) continue;
+				for(Entry<String, HashSet<String>>  entry2 : entry1.getValue().entrySet())
+				{
+					String bubbleId_setted = entry2.getKey();
+					if(!ancestors_set.contains(bubbleId_setted)) continue;
+					
+					FlexibleNode bubble_node_setted = seqName2node.get(bubbleId_setted);
+					FlexibleNodeBranch nb = returnCommonAncestor(bubble_node, bubble_node_setted, mytree);
+					if(nb.b < min_distance)
+					{
+						min_distance = nb.b;
+						bubble_node_setted_select_vertixId = entry1.getKey();
+						bubble_node_setted_select_bubbleId = bubbleId_setted;
+					}
+				}
+			}
+			if(bubble_node_setted_select_vertixId != null) 
+			{
+				stratification4eachVectix.get(bubble_node_setted_select_vertixId).get(bubble_node_setted_select_bubbleId).addAll(entry.getValue().SampleList);
+				//System.out.println("processing " + bubbleId + " with #taxa " + entry.getValue().SampleList.size() + ", merged into " + bubble_node_setted_select_bubbleId);
+			}
+			else
+			{
+				//can not merge entry.
+				//System.out.println("can not merge " + node2seqName.get(entry.getKey()));
+				HashMap<String, HashSet<String>> temp = new HashMap<String, HashSet<String>>();
+				temp.put(node2seqName.get(entry.getKey()), new HashSet<String>(entry.getValue().SampleList));
+				stratification4eachVectix.put(entry.getKey(), temp);
+				//System.out.println("processing " + bubbleId + " with #taxa " + entry.getValue().SampleList.size());
+			}
+		}
+
+		return stratification4eachVectix;
+	}
+	
+	private static HashMap<String, HashSet<String>> stratifyTreeByNode(Tree mytree, Entry<FlexibleNode, ScoreAndStringList> vertix, int exploreTreeNodeLimit, int smallBubbleLimit, HashMap<String, FlexibleNode> seqName2node, HashMap<FlexibleNode, Integer> internalNodeSeqName2Idx, HashMap<FlexibleNode, Integer> externalNodeSeqName2Idx)
+	{
+		FlexibleNode bubbleId_node = vertix.getKey();
+		String bubbleId = node2seqName.get(bubbleId_node);
+		
+		if(vertix.getValue().SampleList.size() == 1)
+		{
+			HashMap<String, HashSet<String>> one_stratification = new HashMap<String, HashSet<String>>();
+			HashSet<String> temp = new HashSet<String>();
+			temp.add(bubbleId);
+			one_stratification.put(bubbleId, temp);
+			return one_stratification;
+		}
+			
+		MyFlexibleTree reroottree = new TIPars().new MyFlexibleTree(mytree, true);
+		copyAttributeFromOneNodeToAnother((FlexibleNode) mytree.getRoot(), (FlexibleNode) reroottree.getRoot());
+		FlexibleNode newroot = null;
+		
+		if(!bubbleId_node.isExternal()) 
+		{
+			int internalIdx = internalNodeSeqName2Idx.get(bubbleId_node);
+			newroot = (FlexibleNode) reroottree.getInternalNode(internalIdx);
+		}
+		else
+		{
+			int externalIdx = externalNodeSeqName2Idx.get(bubbleId_node);
+			newroot = (FlexibleNode) reroottree.getExternalNode(externalIdx);
+		}
+
+		reroottree.beginTreeEdit();
+		if(!newroot.isRoot()) reroottree.setRoot(newroot);
+		reroottree.endTreeEdit();
+		reroottree.toAdoptNodes(newroot);
+		
+		HashMap<FlexibleNode, String> myNode2seqName = setupNode2seqName(reroottree);
+		
+		//regenerate a subtree contains all vertix.nodelist 
+		ArrayList<FlexibleNode> removeNodes = new ArrayList<FlexibleNode>();
+		for(int i = 0; i < reroottree.getExternalNodeCount(); ++i)
+		{
+			FlexibleNode node = (FlexibleNode) reroottree.getExternalNode(i);
+			
+			if(!vertix.getValue().SampleList.contains(myNode2seqName.get(node))) 
+			{
+				removeNodes.add(node);
+			}
+		}
+				
+		Tree prundedtree = removeTaxonReturnTree((FlexibleTree) reroottree, removeNodes);
+		
+		for (int i = 0; i < prundedtree.getExternalNodeCount(); i++) {
+			FlexibleNode n = (FlexibleNode) prundedtree.getExternalNode(i);
+			String sequenceName = n.getTaxon().getId();
+			//if(!vertix.getValue().SampleList.contains(sequenceName)) System.out.println(sequenceName + " not found");
+		}
+		
+		//System.out.println(reroottree.getExternalNodeCount() + "-" + removeNodes.size() + " = " + prundedtree.getExternalNodeCount());
+		//System.out.println("processing " + bubbleId + " with #taxa " + vertix.getValue().SampleList.size());
+		
+		myNode2seqName = setupNode2seqName(prundedtree);
+		
+		HashMap<String, HashSet<String>> stratification = stratifyTree(prundedtree, exploreTreeNodeLimit, myNode2seqName);
+		
+		stratification = mergeSmallBubble(stratification, smallBubbleLimit);
+
+		return stratification;
+	}
+	
+	//get all parent nodes, excluding child and parent
+    private static ArrayList<String> getAncestors(FlexibleNode child, FlexibleNode parent)
+    {
+    	ArrayList<String> ancestors = new ArrayList<String>();
+    	FlexibleNode node = child.getParent();
+    	while(node != null && node != parent)
+    	{
+    		ancestors.add(node2seqName.get(node));
+    		node = node.getParent();
+    	}
+    	if(node == null)
+    	{
+    		//System.out.println(node2seqName.get(parent) + " is not parent of " + node2seqName.get(child));
+    		return null;
+    	}
+    	return ancestors;
+    }
+	
+  //get all parent nodes to root
+    private static ArrayList<String> getAncestors(FlexibleNode child)
+    {
+    	ArrayList<String> ancestors = new ArrayList<String>();
+    	FlexibleNode node = child.getParent();
+    	while(node != null)
+    	{
+    		ancestors.add(node2seqName.get(node));
+    		if(node.isRoot()) break;
+    		else node = node.getParent();
+    	}
+  
+    	return ancestors;
+    }
+	
+    private static HashMap<String, HashSet<String>> stratifyTree(Tree mytree, int numLimit, HashMap<FlexibleNode, String> mynode2seqName) {
+		HashMap<String, HashSet<String>> stratification = new HashMap<String, HashSet<String>>();
+		FlexibleNode node = (FlexibleNode) mytree.getRoot();
+		Queue<FlexibleNode> queue = new LinkedList<FlexibleNode>();
+		queue.add(node);
+		while (!queue.isEmpty()) {
+			node = queue.poll();
+
+			ExploreNodes explorenodes = bfsSearch(mytree, node, numLimit, mynode2seqName);
+			stratification.put(mynode2seqName.get(node), explorenodes.exploreList);
+			for (int i = 0; i < explorenodes.bubbleList.size(); ++i) {
+				queue.add(explorenodes.bubbleList.get(i));
+			}
+		}
+		return stratification;
+	}
+    
+    static Comparator<FlexibleNode> comparatorChildCount = new Comparator<FlexibleNode>() {
+		public int compare(FlexibleNode p1, FlexibleNode p2) {
+			if (!p1.hasChildren())
+				return -1;
+			else if (!p2.hasChildren())
+				return 1;
+
+			if (p1.getChildCount() > p2.getChildCount())
+				return 1;
+			else if (p1.getChildCount() < p2.getChildCount())
+				return -1;
+			else
+				return 0;
+		}
+	};
+	
+	class ExploreNodes {
+		ExploreNodes(HashSet<String> _exploreList, ArrayList<FlexibleNode> _bubbleList) {
+			exploreList = _exploreList;
+			bubbleList = _bubbleList;
+		}
+
+		HashSet<String> exploreList;
+		ArrayList<FlexibleNode> bubbleList;
+	}
+	
+	private static ExploreNodes bfsSearch(Tree mytree, FlexibleNode myroot, int numlimit, HashMap<FlexibleNode, String> mynode2seqName) {
+
+		HashSet<String> exploreList = new HashSet<String>();
+		ArrayList<FlexibleNode> bubbleList = new ArrayList<FlexibleNode>();
+		ArrayList<FlexibleNode> childNodeList = new ArrayList<FlexibleNode>();
+		Queue<FlexibleNode> queue = new LinkedList<FlexibleNode>();
+		queue.add(myroot);
+		FlexibleNode node, childnode;
+		int count = 1, nonzeroBrCount = 0; // set count = 1 because myroot is in.
+		double branchLength;
+		while (!queue.isEmpty()) {
+			node = queue.peek();
+			if (node.getChildCount() + count > numlimit && count > 1) // in case of 1 + myroot.childCount > numlimit
+			{
+				// stop BFS and set bubbleList
+				while (!queue.isEmpty()) {
+					node = queue.poll();
+					if (node.getChildCount() > 0)
+						bubbleList.add(node);
+				}
+				break;
+			}
+			nonzeroBrCount = 0;
+			childNodeList.clear();
+			for (int i = 0; i < node.getChildCount(); ++i) {
+				childNodeList.add(node.getChild(i));
+			}
+			// sort the childNodeList
+			childNodeList.sort(comparatorChildCount);
+			for (int i = 0; i < childNodeList.size(); ++i) {
+				childnode = childNodeList.get(i);
+				branchLength = childnode.getLength();
+				if (!exploreList.contains(mynode2seqName.get(childnode))) {
+					if (childnode.hasChildren())
+						queue.add(childnode);
+					exploreList.add(mynode2seqName.get(childnode));
+					if (branchLength > 0.0000000001)
+						nonzeroBrCount++; /// new add on 20220314, do not count zero branch
+				}
+			}
+			count += nonzeroBrCount;
+			queue.poll();
+		}
+
+		ExploreNodes explorenodes = new TIPars().new ExploreNodes(exploreList, bubbleList);
+		return explorenodes;
+	}
+
+	public static HashMap<String, HashSet<String>> mergeSmallBubble(HashMap<String, HashSet<String>> old_stratification, int smallBubbleLimit)
+	{
+		if(old_stratification.size() == 1) return old_stratification;
+		
+		HashMap<String, HashSet<String>> new_stratification = new HashMap<String, HashSet<String>>();
+		ArrayList<String> smallBubbleList = new ArrayList<String>();
+		for(HashMap.Entry<String, HashSet<String>> entry : old_stratification.entrySet()) {
+			if(entry.getValue().size() > smallBubbleLimit) new_stratification.put(entry.getKey(),entry.getValue());
+			else smallBubbleList.add(entry.getKey());
+		}
+		
+		for(int i = 0; i < smallBubbleList.size(); ++i)
+		{
+			String bubbleName = smallBubbleList.get(i);
+			boolean isfound = false;
+			for(HashMap.Entry<String, HashSet<String>> entry : new_stratification.entrySet())
+			{
+				if(entry.getValue().contains(bubbleName))
+				{
+					entry.getValue().addAll(old_stratification.get(bubbleName));
+					isfound = true;
+				}
+			}
+			if(!isfound) 
+			{
+				for(int j = i + 1; j < smallBubbleList.size(); ++j) //is in the other smallBubbleList
+				{
+					String othersmallbubbleName = smallBubbleList.get(j);
+					if(old_stratification.get(othersmallbubbleName).contains(bubbleName))
+					{
+						old_stratification.get(othersmallbubbleName).addAll(old_stratification.get(bubbleName));
+						isfound = true;
+					}
+				}
+			}
+			if(!isfound)
+			{
+				System.out.println("can not find small bubble " + bubbleName);
+			}
+		}
+		return new_stratification;
+	}
+	
+	/*
+	 * three types of bubbles
+	 * 1: the first (highest) level, output by TIPars2 annotation, # > smallClusterLimit
+	 * 2: the second level, stratify for those large bubbles in level1 (# > exploreTreeNodeLimit)
+	 */
+	public static void writeAllStratification2TSV(HashMap<FlexibleNode, HashMap<String, HashSet<String>>> allstratification,  HashMap<FlexibleNode, ScoreAndStringList> id2PajekVectix, HashMap<FlexibleNode, String> assignedNode2Clade, HashMap<String, FlexibleNode> seqName2node, String outfile) 
+	{
+		try {
+			StringBuilder buffer = new StringBuilder();
+			buffer.append("bubble_type\tannotated_node\tannotated_node_precedor\tdist_to_precedor\tparent_node\tpangolineage\tnum_nodes\tnodes\n");
+			HashSet<FlexibleNode> allHighestBubbles = new HashSet<FlexibleNode>(allstratification.keySet());
+			ArrayList<FlexibleNode> allAncestors = new ArrayList<FlexibleNode>();
+			for(Entry<FlexibleNode, HashMap<String, HashSet<String>>> allentry : allstratification.entrySet())
+			{
+				FlexibleNode pajekVectixIdx = allentry.getKey();
+				String bubbleId = node2seqName.get(pajekVectixIdx);
+				allAncestors.clear(); get_parents2root(pajekVectixIdx, allAncestors);
+				FlexibleNode preAncestor = allAncestors.get(allAncestors.size()-1); //default to be root
+				//distance to root
+				double dist_to_preAncestor = 0;
+				for(int i=1; i < allAncestors.size(); ++i) //exclude itself
+				{
+					if(allHighestBubbles.contains(allAncestors.get(i)))
+					{
+						preAncestor = allAncestors.get(i);
+						break;
+					}
+					dist_to_preAncestor += allAncestors.get(i).getLength();
+				}
+				String top_bubbleId = bubbleId;
+				
+				//the parent of root is set to be null
+				buffer.append(1 + "\t" + top_bubbleId + "\t" + (preAncestor != pajekVectixIdx? node2seqName.get(preAncestor) : "null") + "\t" + dist_to_preAncestor);
+				
+                if (!pajekVectixIdx.isRoot())	buffer.append("\t" + node2seqName.get(pajekVectixIdx.getParent())); //parent_node
+                else buffer.append("\tnull");
+                
+                String ancestral_state = assignedNode2Clade.get(pajekVectixIdx);
+                buffer.append("\t" + ancestral_state); //pangolineage
+                
+				HashMap<String, HashSet<String>> stratification = allentry.getValue();
+				
+				HashSet<String> top_bubbleId_nodelist = getBubbleSubTreeAllNodesInFullTree(stratification.get(top_bubbleId), top_bubbleId, seqName2node);
+				buffer.append("\t" + stratification.get(top_bubbleId).size() + "\t");
+					
+				int count = 0;
+				for (String nodeName : top_bubbleId_nodelist)
+				{
+					count++;
+					if(count < top_bubbleId_nodelist.size())
+						buffer.append(nodeName + ",");
+					else
+						buffer.append(nodeName + "\n");
+				}
+					
+				if(stratification.size() > 1)
+				{						
+					for (Entry<String, HashSet<String>> entry : stratification.entrySet()) {
+						if(entry.getKey().compareTo(top_bubbleId) != 0)
+						{
+							FlexibleNode annotated_node = seqName2node.get(entry.getKey());
+							allAncestors.clear(); get_parents2root(annotated_node, allAncestors);
+			
+							dist_to_preAncestor = 0;
+							FlexibleNode annotated_node_preAncestor = allAncestors.get(allAncestors.size()-1); //default to be root
+							for(int i=1; i < allAncestors.size(); ++i) //exclude itself
+							{
+								if(stratification.containsKey(node2seqName.get(allAncestors.get(i))))
+								{
+									annotated_node_preAncestor = allAncestors.get(i);
+									break;
+								}
+								dist_to_preAncestor += allAncestors.get(i).getLength();
+							}
+							buffer.append(2 + "\t" + entry.getKey() + "\t" + ((annotated_node_preAncestor != annotated_node)? node2seqName.get(annotated_node_preAncestor) : "null") + "\t" + dist_to_preAncestor);
+							if (!annotated_node.isRoot())	buffer.append("\t" + node2seqName.get(annotated_node.getParent())); //parent_node
+			                else buffer.append("\tnull");
+							
+							buffer.append("\t" + ancestral_state); //pangolineage
+							
+							HashSet<String> nodelist = getBubbleSubTreeAllNodesInFullTree(stratification.get(entry.getKey()), entry.getKey(), seqName2node);
+							buffer.append("\t" + entry.getValue().size() + "\t");
+							count = 0;
+							for (String nodeName : nodelist)
+							{
+								count++;
+								if(count < nodelist.size())
+									buffer.append(nodeName + ",");
+								else
+									buffer.append(nodeName + "\n");
+							}
+						}
+					}
+				}
+			}
+			PrintStream out = new PrintStream(new FileOutputStream(new File(outfile)));
+			out.println(buffer.toString());
+			out.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static HashSet<String> getBubbleSubTreeAllNodesInFullTree(HashSet<String> subtreeNodes, String subtree_root, HashMap<String, FlexibleNode> seqName2node)
+	{
+		HashSet<String> allSubtreeNodes = (HashSet<String>)subtreeNodes.clone();
+		FlexibleNode root_node = seqName2node.get(subtree_root);
+		for(String nodename : subtreeNodes)
+		{
+			FlexibleNode child_node = seqName2node.get(nodename);
+			ArrayList<String> ancestors = getAncestors(child_node, root_node);
+			if(ancestors != null)
+			{
+				for(int i=0; i<ancestors.size(); ++i)
+				{
+					if(!allSubtreeNodes.contains(ancestors.get(i)))
+						allSubtreeNodes.add(ancestors.get(i));
+				}
+			}
+		}
+		return allSubtreeNodes;
+	}
+	
+
+	
 	public static void main(String[] args) {
 		
 		Runtime run = Runtime.getRuntime();
@@ -4049,6 +4515,10 @@ public class TIPars {
 		double fscore_min = 0;
 		String checkpoint_prefix = ""; //only available when using fasta file format for insertion of a set of sequences
 		String annotation_assignment = "";
+		//tree BFS
+		int exploreTreeNodeLimit = 2000;
+		int smallBubbleLimit = 100;
+		int smallClusterLimit = 10;
 		
 		String nidname = "label";
 		String attname = "GenName";
@@ -4115,6 +4585,14 @@ public class TIPars {
 				
 				if(otype.equals("refinement_from_annotation")) annotation_assignment = args[6]; 
 			}
+			
+			if(otype.equals("tree_BFS"))
+			{
+				inqfn = args[2]; //clade2samples, the annotation table
+				exploreTreeNodeLimit = Integer.parseInt(args[3]);
+				smallBubbleLimit = Integer.parseInt(args[4]);
+				smallClusterLimit = Integer.parseInt(args[5]);
+			}
 				 
 			
 			if (otype.equals("insertion") || otype.equals("placement") || otype.equals("refinement") || otype.equals("refinement_from_annotation"))
@@ -4125,7 +4603,7 @@ public class TIPars {
 	            if(aa_flag) _used_scoreTable = _aminoacid_scoreTable;
 			}
 			
-			if((otype.equals("refinement") || otype.equals("refinement_from_annotation")) && informat.equals("fasta"))
+			if((otype.equals("refinement") || otype.equals("refinement_from_annotation") || otype.equals("insertion")) && informat.equals("fasta"))
 			{
 				if(!args[args.length - 4].equals("false")) checkpoint_prefix = args[args.length - 4];
 			}
@@ -4174,7 +4652,7 @@ public class TIPars {
 				}
 			}
 			HashSet<String> taxaNames = null;		
-			if (otype.equals("annotation") || otype.equals("annotation_details") || otype.equals("refinement") || otype.equals("refinement_from_annotation"))
+			if (otype.equals("annotation") || otype.equals("annotation_details") || otype.equals("refinement") || otype.equals("refinement_from_annotation") || otype.equals("tree_BFS"))
 			{
 				taxaNames = setupHashSetOfTaxaName(tree);
 				clade2samples = readCladeSample(inqfn, taxaNames);
@@ -4182,10 +4660,11 @@ public class TIPars {
 			
 			HashMap<String, FlexibleNode> seqName2node = null;
 			HashMap<FlexibleNode, String> assignmentNode2Clade = null;
-			if (otype.equals("annotation_details"))
+			if (otype.equals("annotation_details") || otype.equals("tree_BFS"))
 			{
 				seqName2node = setupHashtableOfseqName2node(tree);
-				assignmentNode2Clade = readAnnotations(annotation_assignment, seqName2node);
+				if(otype.equals("annotation_details"))
+					assignmentNode2Clade = readAnnotations(annotation_assignment, seqName2node);
 			}
 			
 			HashMap<String, String> assignmentNodeName2Clade = null;
@@ -4237,14 +4716,67 @@ public class TIPars {
 	            System.out.println("AncestralSequenceFile: " + inafn);
 	            System.out.println("QueryFile: " + inqfn);
 	            
-				ArrayList<Integer> queryIdxs = new ArrayList<Integer>(queryList.keySet());
+	            ArrayList<Integer> queryIdxs = new ArrayList<Integer>(queryList.keySet());
 				queryIdxs.sort(Comparator.naturalOrder());
+				
+				int current_max_used_index4internalnode = -1;
+				if(checkpoint_prefix != "")
+				{
+					String inFASTAFilePath = output_folder + "/" + checkpoint_prefix + "_addedInternodeP.fasta";
+					File checkfile = new File(inFASTAFilePath);
+					if (checkfile.exists()) {
+						
+						if(informat.contains("fasta"))
+						{
+							readFastaAlignmentFile(inFASTAFilePath);
+						}
+						
+						System.out.println("AddedAncestralSequenceFile: " + inFASTAFilePath);
+						
+						String inTreePath = output_folder  + "/" + checkpoint_prefix + "_addedTree.nwk";
+						tni = new NewickImporter(new FileReader(inTreePath));
+						tree = tni.importTree(null);
+						myAdd = new TIPars(tree, otype, output_folder);
+
+						String inFilePath = output_folder + "/" + checkpoint_prefix + "_remainingSeqName.txt";
+						ArrayList<String> innames = readSeqName(inFilePath);
+						HashSet<String> innames_set = new HashSet<String>(innames);
+						ArrayList<Integer> temp = new ArrayList<Integer>();
+						for(int i = 0; i < queryIdxs.size(); i++)
+						{
+							int idx = queryIdxs.get(i);
+							String name = queryList.get(idx);
+							if(innames_set.contains(name)) temp.add(queryIdxs.get(i));
+						}
+						queryIdxs = temp;
+					
+						if(queryIdxs.size() != innames.size())
+						{
+							System.out.println("Error: reading checkpint query seq does not match the tree!");
+						}
+
+						for(HashMap.Entry<String, Integer> entry : seqIdxMap.entrySet()) {
+							if(entry.getKey().charAt(0) == 'p')
+							{
+								int usedIdx = Integer.parseInt(entry.getKey().substring(1));
+								if(usedIdx > current_max_used_index4internalnode) current_max_used_index4internalnode = usedIdx;
+							}
+						}
+						current_max_used_index4internalnode = current_max_used_index4internalnode;
+					}
+					else
+					{
+						System.out.println("Warning: no checkpoint tree file and start from scratch!");
+					}
+				}
+				
 				for (int i = 0; i < queryIdxs.size(); i++) {
 					int idx = queryIdxs.get(i);
 					String name = queryList.get(idx);
 					String query = stringSequencesList.get(idx);
-					String qid = "q" + (i + 1);
-					String pid = "p" + (i + 1);
+					current_max_used_index4internalnode++;
+					String qid = "q" + current_max_used_index4internalnode;
+					String pid = "p" + current_max_used_index4internalnode;
 					outtree = myAdd.addQuerySequence(name, query, qid, pid, printDisInfoOnScreen, new double[3], otype, 0);
 					myAdd.mytree = outtree;
 					myAdd.setupHashtableOfnode2seqName();
@@ -4252,10 +4784,42 @@ public class TIPars {
 					if (!printDisInfoOnScreen) {
 						for (int j = 0; j < progressInfo.length(); j++)
 							System.out.print("\b");
-						progressInfo = (i + 1) + "/" + queryIdxs.size();
+						progressInfo = (current_max_used_index4internalnode + 1) + "/" + queryIdxs.size();
 						System.out.print(progressInfo);
 						if (i == queryIdxs.size() - 1)
 							System.out.println();
+					}
+					
+					//checkpoint to store the current outtree and remaining samples to be added
+					if(checkpoint_prefix != "" && (i % 1000 == 999 || i == queryIdxs.size() - 1))
+					{
+						String outTreePath = output_folder  + "/" + checkpoint_prefix + "_addedTree.nwk";
+						writeToTree(outtree, outTreePath, "insertion");
+						String outFilePath = output_folder + "/" + checkpoint_prefix + "_remainingSeqName.txt";
+						ArrayList<String> remainingSeqName = new ArrayList<String>();
+						for(int j = i+1; j < queryIdxs.size(); ++j)
+						{
+							idx = queryIdxs.get(j);
+							name = queryList.get(idx);
+							remainingSeqName.add(name);
+						}
+						writeSeqName(outFilePath, remainingSeqName);
+						
+						if(informat.contains("fasta"))
+						{
+							String outFASTAFilePath = output_folder + "/" + checkpoint_prefix + "_addedInternodeP.fasta";
+							ArrayList<String> desc = new ArrayList<String>();
+							ArrayList<String> seq = new ArrayList<String>();
+							for(HashMap.Entry<String, Integer> entry : seqIdxMap.entrySet()) {
+								if(entry.getKey().charAt(0) == 'p')
+								{
+									desc.add(entry.getKey());
+									seq.add(stringSequencesList.get(seqIdxMap.get(entry.getKey())));
+								}
+							}
+							writeFASTA(desc, seq, outFASTAFilePath);
+							System.out.println("addedInternodeP number: " + desc.size());
+						}
 					}
 				}
 			}
@@ -4331,7 +4895,7 @@ public class TIPars {
 	            System.out.println("LabelFile: " + inqfn);
 	            System.out.println("AnnotationFile: " + annotation_assignment);
 
-				HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples = myAdd.annotationStatistics(clade2samples, assignmentNode2Clade, seqName2node, taxaNames, printDisInfoOnScreen);
+				HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples = myAdd.annotationStatistics(clade2samples, assignmentNode2Clade, seqName2node, taxaNames, printDisInfoOnScreen, true);
 				writeAssignCladeAndTaxa(outfn, assignmentNode2Clade, assignedNode2Samples);
 				System.out.println("INFO: write annotation details to file " + outfn);
 				
@@ -4362,6 +4926,26 @@ public class TIPars {
 	            System.out.println("LabelFile: " + inqfn);
 	            System.out.println("AnnotationFile: " + annotation_assignment);
 				outtree = myAdd.doTreeRefinement(clade2samples, informat, printDisInfoOnScreen, assignmentNodeName2Clade, checkpoint_prefix);
+			}
+			else if (otype.equals("tree_BFS"))
+			{
+				System.out.println("TreeFile: " + intfn);
+	            System.out.println("LabelFile: " + inqfn);
+	            System.out.println("ExploreTreeNodeLimit: " + exploreTreeNodeLimit);
+	            System.out.println("SmallBubbleLimit: " + smallBubbleLimit);
+	            System.out.println("SmallClusterLimit: " + smallClusterLimit);
+	            HashMap<String, String> assignmentMap = myAdd.treeAnnotation(clade2samples, fscore_min, printDisInfoOnScreen);
+	            assignmentNode2Clade = new HashMap<FlexibleNode, String>();
+	            for (Entry<String,String> entry : assignmentMap.entrySet()) {
+	            	if(seqName2node.containsKey(entry.getKey()))
+	            		assignmentNode2Clade.put(seqName2node.get(entry.getKey()), entry.getValue());
+	            	else
+	            		System.out.println("WARNNING: can not find assigned node " + entry.getKey());
+	            }
+	            
+	            HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples = myAdd.annotationStatistics(clade2samples, assignmentNode2Clade, seqName2node, taxaNames, printDisInfoOnScreen, false);
+	            HashMap<FlexibleNode, HashMap<String, HashSet<String>>> stratification = stratifyTree(tree, assignedNode2Samples, exploreTreeNodeLimit, smallBubbleLimit, smallClusterLimit, seqName2node);
+				writeAllStratification2TSV(stratification, assignedNode2Samples, assignmentNode2Clade, seqName2node, outfn);
 			}
 			
 			long endTime2 = System.currentTimeMillis();
