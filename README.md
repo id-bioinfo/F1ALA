@@ -74,7 +74,7 @@ usher -v taxa.vcf -t 81784_removedTree.tree -d ./usher -o ./usher/81784_AddTo_10
 ```
 + The refined tree by UShER is ./usher/final-tree.nh.
 
-## Tree bubbling
+## Tree bubbling (to do)
 Collapse the tree into multiple clusters based on the ancestal lineage annotation.
 Large clusters (>exploreTreeNodeLimit) will further to stratify into multple bubbles by BFS search.
 Small clusters (<smallClusterLimit) and bubbles (<smallBubbleLimit) will be merged.
