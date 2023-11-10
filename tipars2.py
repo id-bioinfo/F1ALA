@@ -31,6 +31,10 @@ parser.add_argument("-l", "--label", help="Pango lineage or other metadata for t
 parser.add_argument("-fs", "--fscore", default="0", help="minimal f1score required for annotation (default = 0)")
 parser.add_argument("-as", "--assignment", help="annotation assignment file")
 
+#tree BFS
+parser.add_argument("-nl", "--exploreTreeNodeLimit", default="2000", help="maximum nodes in a bubble for BFS (default = 2000)")
+parser.add_argument("-bl", "--smallBubbleLimit", default="5", help="minimal nodes in a bubble for BFS (default = 5)")
+parser.add_argument("-cl", "--smallClusterLimit", default="5", help="minimal nodes in a cluster for annotation (default = 5)")
 
 #java
 parser.add_argument("-x", "--xmx", default="4G", help="Java Xmx setting, e.g.,1G,8G")
@@ -69,4 +73,9 @@ if args.refinement_from_annotation:
         args.sequence + " " + args.ancseq + " " + args.label + " " + args.format + " " + args.assignment + " " + \
         str(args.aa) + " " + args.checkpoint + " " + args.output + " " + args.print2screen + " " + args.threads   
 
+if args.tree_BFS:
+    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/TIPars2.jar" + " tree_BFS " + args.tree + " " + \
+        args.label + " " + " " + args.exploreTreeNodeLimit + " " + " " + args.smallBubbleLimit + " " + args.smallClusterLimit + " " + \
+        args.output + " " + args.print2screen + " " + args.threads
+    
 os.system(cmd)
