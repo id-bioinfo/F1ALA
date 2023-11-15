@@ -51,6 +51,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 
+
 public class TIPars {
 
 	private String OUTPUT_FOLDER;
@@ -269,7 +270,7 @@ public class TIPars {
 				double scoreAB = computeNodeScore(nodeAseq, nodeBseq);
 				FlexibleNode myNodeB = selectedNode;
 				FlexibleNode myNodeA = myNodeB.getParent();
-				/// iteratively consider upper branch of Aâ€™s parent to A for scaling if
+				/// iteratively consider upper branch of A¡¯s parent to A for scaling if
 				/// selectedScores[2] > Double.MIN_VALUE and scoreAB <= MinDoubleNumLimit.
 				while ((scoreAB <= MinDoubleNumLimit || myNodeB.getLength() <= MinDoubleNumLimit)
 						&& !myNodeA.isRoot()) {
@@ -4308,7 +4309,7 @@ public class TIPars {
 			nonzeroBrCount = 0;
 			childNodeList.clear();
 			for (int i = 0; i < node.getChildCount(); ++i) {
-				childNodeList.add(node.getChild(i));
+				if(node.getChild(i) != null) childNodeList.add(node.getChild(i));
 			}
 			// sort the childNodeList
 			childNodeList.sort(comparatorChildCount);
@@ -4934,6 +4935,7 @@ public class TIPars {
 	            System.out.println("ExploreTreeNodeLimit: " + exploreTreeNodeLimit);
 	            System.out.println("SmallBubbleLimit: " + smallBubbleLimit);
 	            System.out.println("SmallClusterLimit: " + smallClusterLimit);
+	            System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 	            HashMap<String, String> assignmentMap = myAdd.treeAnnotation(clade2samples, fscore_min, printDisInfoOnScreen);
 	            assignmentNode2Clade = new HashMap<FlexibleNode, String>();
 	            for (Entry<String,String> entry : assignmentMap.entrySet()) {
