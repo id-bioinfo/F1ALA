@@ -31,6 +31,7 @@ conda install tipars2
 # Quick Usage
 
 ## Ancestral lineage annotation
+Infer the lineage information at the ancestor nodes in a given rooted tree with labeled taxa.
 
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
@@ -39,18 +40,21 @@ cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 
 ## Annotation statistics and visualization 
 
-```bash
-cd /home/ytye/tipars2_github/Benchmark_datasets/100k
-/home/ytye/tipars2_github/tipars2 --annotation_details -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output 1248_in_100k_annotation_details.tsv -T 8
-```
-
 + Write the annotation details to the output file, including annotated_node, annotated_node_precedor, distance_to_root, pangolineage, F1score and samples.
 + Write the annotation visualization to file graph-data-generated.js that should be moved to the provided 'visual' folder and open the 'graph.html' in a browser.
 + Collapse the tree by lineages and write this collapsed tree to file [#lineages]_collapsedTree.nwk.
 + Remove inconsistent taxa and write this pruned tree to file [#consistent_taxa]_removedTree.nwk (used for tree refinement using other phylogenetic insertion methods, e.g., UShER).
 + Write the inconsistent taxa names and their lineages to file [#inconsistent_taxa]_unKeepSamples_[#consistent_taxa]_tree.tsv.
 
+```bash
+cd /home/ytye/tipars2_github/Benchmark_datasets/100k
+/home/ytye/tipars2_github/tipars2 --annotation_details -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output 1248_in_100k_annotation_details.tsv -T 8
+```
+
 ## Tree refinement
+
+Refine of a phylogeny by pruning all taxa with inconsistent label compared to their closest annotated ancestors and re-inserting them back using phylogenetic insertion methods such as TIPars and UShER.
+
 ### Phylogenetic insertion using TIPars
 + include processing ancestral lineage annotation
 ```bash
@@ -74,7 +78,7 @@ usher -v taxa.vcf -t 81784_removedTree.tree -d ./usher -o ./usher/81784_AddTo_10
 ```
 + The refined tree by UShER is ./usher/final-tree.nh.
 
-## Tree bubbling (to do)
+## Tree bubbling
 Collapse the tree into multiple clusters based on the ancestal lineage annotation.
 Large clusters (>exploreTreeNodeLimit) will further to stratify into multple bubbles by BFS search.
 Small clusters (<smallClusterLimit) and bubbles (<smallBubbleLimit) will be merged.
