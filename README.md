@@ -82,11 +82,21 @@ usher -v taxa.vcf -t 81784_removedTree.tree -d ./usher -o ./usher/81784_AddTo_10
 Collapse the tree into multiple clusters based on the ancestal lineage annotation.
 Large clusters (>exploreTreeNodeLimit) will further to stratify into multple bubbles by BFS search.
 Small clusters (<smallClusterLimit) and bubbles (<smallBubbleLimit) will be merged.
+Clusters will link to bubbles.
 
 ```bash
 cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 /home/ytye/tipars2_github/tipars2 --tree_BFS -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 100k_tree_bfs.tsv --exploreTreeNodeLimit 2000 --smallBubbleLimit 5 --smallClusterLimit 5 -T 8 
 ```
++ Output tsv file includes 8 items.
+1. bubble_type : 1 is cluster and 2 is bubble
+2. annotated_node : root of the subtree for cluster or bubble
+3. annotated_node_precedor : precedor of this annotated_node where precedor is also a cluster or bubble
+4. dist_to_precedor : total branch length from annotated_node_precedor to annotated_node
+5. parent_node : parent node of this annotated_node in the input tree
+6. pangolineage : lineage label annotated by 'Ancestral lineage annotation'
+7. num_nodes : number of nodes in the cluster or bubble
+8. nodes : a list of nodes in the cluster or bubble (separated by comma)
 
 # How to Cite
 
