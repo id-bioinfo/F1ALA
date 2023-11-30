@@ -270,7 +270,7 @@ public class TIPars {
 				double scoreAB = computeNodeScore(nodeAseq, nodeBseq);
 				FlexibleNode myNodeB = selectedNode;
 				FlexibleNode myNodeA = myNodeB.getParent();
-				/// iteratively consider upper branch of A¡¯s parent to A for scaling if
+				/// iteratively consider upper branch of A's parent to A for scaling if
 				/// selectedScores[2] > Double.MIN_VALUE and scoreAB <= MinDoubleNumLimit.
 				while ((scoreAB <= MinDoubleNumLimit || myNodeB.getLength() <= MinDoubleNumLimit)
 						&& !myNodeA.isRoot()) {
