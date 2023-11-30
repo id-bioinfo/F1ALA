@@ -2663,7 +2663,7 @@ public class TIPars {
 		buffer.append("annotated_node\tannotated_node_precedor\tdist_to_root\tpangolineage\tF1score\tsamples\n");
 		ArrayList<FlexibleNode> ancestorList = new ArrayList<FlexibleNode>();
 		HashMap<FlexibleNode, FlexibleNode> assignedNode2parent = new HashMap<FlexibleNode, FlexibleNode>();
-		for (HashMap.Entry<FlexibleNode, String> entry : assignedNode2Clade.entrySet()) {
+		for (HashMap.Entry<FlexibleNode, ScoreAndStringList> entry : assignedNode2Samples.entrySet()) {
 			//get the preceding annotated node
 			FlexibleNode annotated_node = entry.getKey();
 			ancestorList.clear(); get_parents2root(annotated_node, ancestorList);
@@ -2688,7 +2688,7 @@ public class TIPars {
 				dist_to_root += ancestorList.get(j).getLength();
 			}
 			buffer.append("\t" + dist_to_root); //distance to root
-			buffer.append("\t" + entry.getValue()); //pangolineage
+			buffer.append("\t" + assignedNode2Clade.get(annotated_node)); //pangolineage
 			buffer.append("\t" + assignedNode2Samples.get(annotated_node).F1Score); //F1Score
 			ArrayList<String> sampleList = assignedNode2Samples.get(annotated_node).SampleList;
 			buffer.append("\t" + sampleList.get(0));
@@ -2923,7 +2923,7 @@ public class TIPars {
 				e.printStackTrace();
 			}
 			
-            if (selectNode[0] != null && maxF1Score_selectPrecisionRecall[0] >= fscore_min) {
+            if (selectNode[0] != null && maxF1Score_selectPrecisionRecall[0] >= fscore_min && maxF1Score_selectPrecisionRecall[0] > 0) {
             	assignmentNode2Clade.put(selectNode[0], cladeName);
 				String selectNodeName = node2seqName.get(selectNode[0]);
 				assignmentMap.put(selectNodeName, cladeName);
@@ -2965,8 +2965,10 @@ public class TIPars {
 			{
 				if(seqName2node.containsKey(samples.get(i)))
 				{
+					
 					FlexibleNode sampleNode = seqName2node.get(samples.get(i));
 					ancestorList.clear(); get_parents2root(sampleNode, ancestorList);
+
 					int j = 0;
 					for(j=0; j<ancestorList.size(); ++j)
 					{
@@ -2974,7 +2976,7 @@ public class TIPars {
 						{
 							String predictClade = assignmentNode2Clade.get(ancestorList.get(j));
 							assignedSamples++;
-							
+
 							if(!assignedNode2Samples.containsKey(ancestorList.get(j)))
 							{
 								ScoreAndStringList scoreAndStringList = new TIPars().new ScoreAndStringList();
@@ -3012,10 +3014,11 @@ public class TIPars {
 			}
 		}
 		
-		for(HashMap.Entry<FlexibleNode, String> entry : assignmentNode2Clade.entrySet())
+		
+		for(HashMap.Entry<FlexibleNode, Integer[]> entry : assignedNode2TrueFalsePositive.entrySet())
 		{
 			FlexibleNode annotated_node = entry.getKey();
-			String clade = entry.getValue();
+			String clade = assignmentNode2Clade.get(annotated_node);
 			double Precision = assignedNode2TrueFalsePositive.get(annotated_node)[0] / (double) (assignedNode2TrueFalsePositive.get(annotated_node)[0] +assignedNode2TrueFalsePositive.get(annotated_node)[1]);
 			double Recall = assignedNode2TrueFalsePositive.get(annotated_node)[0] / (double) clade2samples.get(clade).size();
 			assignedNode2Samples.get(annotated_node).F1Score = 2 * Precision * Recall / (Precision + Recall);
@@ -4023,7 +4026,12 @@ public class TIPars {
 	public static void copyStaticWebFiles(String output_dir) {
 		final String currentJarPath = TIPars.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		final File jarFile = new File(currentJarPath);
+		if(jarFile == null || jarFile.getParentFile() == null) {
+			System.err.println("ERROR: Failed to copy js files and please use them in provided folder 'visual'!");
+			return;
+		}
 		final String jarDir = jarFile.getParentFile().getAbsolutePath();
+		
 		final String refinedOutputPath = output_dir.isEmpty() ? "." : output_dir;
 		try {
 			copyFiles(jarDir + "/visual/graph.html", refinedOutputPath + "/graph.html");
@@ -4031,6 +4039,7 @@ public class TIPars {
 			copyFiles(jarDir + "/visual/graph.js", refinedOutputPath + "/graph.js");
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.err.println("ERROR: Failed to copy js files and please use them in provided folder 'visual'!");
 		}
 	}
 	
