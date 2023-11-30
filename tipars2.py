@@ -12,7 +12,7 @@ parser.add_argument("-annotation", "--annotation", action='store_true', help="an
 parser.add_argument("-annotation_details", "--annotation_details", action='store_true', help="calculate the statistics for the annotation")
 parser.add_argument("-refinement", "--refinement", action='store_true', help="refine the tree by annotation and inconsistent tips re-insertion")
 parser.add_argument("-refinement_from_annotation", "--refinement_from_annotation", action='store_true', help="refine the tree by given annotation")
-
+parser.add_argument("-tree_BFS", "--tree_BFS", action='store_true', help="collapse tree to bubbles")
 
 parser.add_argument("-t", "--tree", help = "tree file, in Newick format")
 parser.add_argument("-s", "--sequence", help="fasta/vcf file contains aligned taxa sequences")
