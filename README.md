@@ -11,9 +11,9 @@ Illustration of the algorithm for ancestral lineage annotation. Given a tree wit
 
 # Installation
 
-A precompiled executable program is available as TIPars2.jar (required Java 11 or above). 
+**A precompiled executable program is available as TIPars2.jar (required Java 11 or above).**
 
-For users to compile TIPars2 source code from GitHub, 
+If users want to compile TIPars2 from source code, 
 ```bash
 git clone https://github.com/id-bioinfo/TIPars2.git
 cd TIPars2
