@@ -5,12 +5,12 @@
 
 package:
   files:
-    - TIPars2.jar
+    - F1ALA.jar
     - lib/*
-    - tipars2.py
-    - tipars2
+    - f1ala.py
+    - f1ala
     - visual/*
-  name: tipars2
+  name: f1ala
   version: '1.0'
 source:
   path: /mnt/c/Users/user/documents/isaac/TIPars2
@@ -33,7 +33,7 @@ test:
   commands:
     - echo "Success"
 about:
-  home: https://github.com/id-bioinfo/TIPars
+  home: https://github.com/id-bioinfo/F1ALA
 extra:
   copy_test_source_files: true
   final: true
