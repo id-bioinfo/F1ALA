@@ -4027,7 +4027,7 @@ public class TIPars {
 		final String currentJarPath = TIPars.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		final File jarFile = new File(currentJarPath);
 		if(jarFile == null || jarFile.getParentFile() == null) {
-			System.err.println("ERROR: Failed to copy js files and please use them in provided folder 'visual'!");
+			//System.err.println("ERROR: Failed to copy js files and please use them in provided folder 'visual'!");
 			return;
 		}
 		final String jarDir = jarFile.getParentFile().getAbsolutePath();
@@ -4340,7 +4340,7 @@ public class TIPars {
 		ExploreNodes explorenodes = new TIPars().new ExploreNodes(exploreList, bubbleList);
 		return explorenodes;
 	}
-
+	
 	public static HashMap<String, HashSet<String>> mergeSmallBubble(HashMap<String, HashSet<String>> old_stratification, int smallBubbleLimit)
 	{
 		if(old_stratification.size() == 1) return old_stratification;
@@ -4685,7 +4685,7 @@ public class TIPars {
 			
 			long startTime2 = System.currentTimeMillis();
 			
-			System.out.println("TIPars Version 2.0.0: Ultrafast tree annotation for Pango lineages of SRAS-CoV-2 sequences and application for tree refinement");
+			System.out.println("F1ALA: ultrafast and memory-efficient Ancestral Lineage Annotation for huge SARS-CoV-2 phylogeny using F1-score");
 			System.out.println("Progress: " + otype);
 
 			String progressInfo = "";
