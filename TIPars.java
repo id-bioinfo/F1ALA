@@ -112,14 +112,14 @@ public class TIPars {
 		edge_number = 1;
 		if (otype.equals("placement")) {
 			for (int i = 0; i < mytree.getExternalNodeCount(); i++) {
-				Integer edge = new Integer(edge_number);
+				Integer edge = edge_number;
 				FlexibleNode node = (FlexibleNode) mytree.getExternalNode(i);
 				node2edge.put(node, edge);
 				edge_number++;
 			}
 
 			for (int i = 0; i < mytree.getInternalNodeCount(); i++) {
-				Integer edge = new Integer(edge_number);
+				Integer edge = edge_number;
 				FlexibleNode node = (FlexibleNode) mytree.getInternalNode(i);
 				node2edge.put(node, edge);
 				edge_number++;
