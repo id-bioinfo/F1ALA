@@ -1,8 +1,8 @@
-# TIPars2: An ultrafast and memory-efficient ancestral lineage annotator for huge SARS-CoV-2 phylogeny using F1-score
+# F1ALA: ultrafast and memory-efficient Ancestral Lineage Annotation for huge SARS-CoV-2 phylogeny using F1-score
 
-The unprecedented scale of the global SARS-CoV-2 phylogeny overwhelmed most common ancestral lineage annotation methods (such as matUtils and PastML) when inferring the PANGO lineage information to a rooted tree with labeled taxa. Furthermore, the accuracy of these annotation methods has not been clearly elucidated. To resolve these challenges, we developed an efficient and accurate ancestral lineage annotation method (TIPars2) utilizing F1-score to evaluate the confidence for assigning a lineage annotation at a specific ancestor node using taxa lineage labels. TIPars2 achieved ultrafast speed (less than 13 minutes) with significant less memory usage (3.6 GB) for annotating 2,277 PANGO lineages in a phylogeny with 5.26 million taxa, allowing real-time lineage tracking to be performed on a laptop computer. Benchmarking on three phylogenies with 100K, 660K and 5.26M taxa, TIPars2 significantly outperformed matUtils and was comparable to PastML on the annotation accuracy in both empirical and simulated tests. The high efficiency of TIPars2 enables the refinement of a huge SARS-CoV-2 phylogeny by pruning all taxa with inconsistent label compared to their closest annotated ancestors and re-inserting them back. We demonstrated that this refinement was able to optimize the SARS-CoV-2 phylogenetic tree topology achieving a larger tree log-likelihood and a smaller parsimony score.
+The unprecedented scale of the global SARS-CoV-2 phylogeny overwhelmed most common ancestral lineage annotation methods (such as matUtils and PastML) when annotating the PANGO lineage information to unlabeled nodes in a rooted tree. Furthermore, the accuracy of these annotation methods has not been clearly elucidated. To resolve these challenges, we developed an efficient and accurate ancestral lineage annotation method (F1ALA). It utilizes F1-score to evaluate the confidence for assigning a lineage annotation at a specific ancestor node given lineage labels of taxa in the tree. F1ALA achieved ultrafast speed (less than 13 minutes) with significant less memory usage (3.6 GB) for annotating 2,277 PANGO lineages in a phylogeny with 5.26 million taxa, allowing real-time lineage tracking to be performed on a laptop computer. Benchmarking on three phylogenies with 100K, 660K and 5.26M taxa, F1ALA significantly outperformed matUtils and was comparable to PastML on the annotation accuracy in both empirical and simulated tests. The high efficiency of F1ALA enables the refinement of a huge SARS-CoV-2 phylogeny by pruning all taxa with inconsistent label compared to their closest annotation nodes and re-inserting them back. We demonstrated that this refinement was able to optimize the SARS-CoV-2 phylogenetic tree topology achieving a larger tree log-likelihood and a smaller parsimony score.
 
-If there is any question about using TIPars2, please send email to tipars@d24h.hk.
+If there is any question about using F1ALA, please send email to tipars@d24h.hk.
 
 # How It Works 
 
@@ -11,21 +11,21 @@ Illustration of the algorithm for ancestral lineage annotation. Given a tree wit
 
 # Installation
 
-**A precompiled executable program is available as TIPars2.jar (required Java 11 or above).**
-
-If users want to compile TIPars2 from source code, 
+**A precompiled executable program is available as F1ALA.jar (required Java 11 or above).**
 ```bash
-git clone https://github.com/id-bioinfo/TIPars2.git
-cd TIPars2
+git clone https://github.com/id-bioinfo/F1ALA.git
+cd F1ALA
+chmod a+x f1ala
+# If users want to compile F1ALA from source code, 
 make
 ```
 
 For conda installation, 
 ```bash
-conda create -n tipars
-conda activate tipars
-conda config --add channels yongtaotipars
-conda install tipars2
+conda create -n f1ala
+conda activate f1ala
+conda config --add channels f1ala
+conda install f1ala
 ```
 
 # Quick Usage
@@ -34,8 +34,8 @@ conda install tipars2
 Infer the lineage information at the ancestor nodes in a given rooted tree with labeled taxa.
 
 ```bash
-cd /home/ytye/tipars2_github/Benchmark_datasets/100k
-/home/ytye/tipars2_github/tipars2 --annotation -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 1248_in_100k_annotation.tsv -T 8 
+cd /home/ytye/f1ala_github/Benchmark_datasets/100k
+/home/ytye/f1ala_github/f1ala --annotation -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 1248_in_100k_annotation.tsv -T 8 
 ```
 
 ## Annotation statistics and visualization 
@@ -47,8 +47,8 @@ cd /home/ytye/tipars2_github/Benchmark_datasets/100k
 + Write the inconsistent taxa names and their lineages to file [#inconsistent_taxa]_unKeepSamples_[#consistent_taxa]_tree.tsv.
 
 ```bash
-cd /home/ytye/tipars2_github/Benchmark_datasets/100k
-/home/ytye/tipars2_github/tipars2 --annotation_details -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output 1248_in_100k_annotation_details.tsv -T 8
+cd /home/ytye/f1ala_github/Benchmark_datasets/100k
+/home/ytye/f1ala_github/f1ala --annotation_details -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output 1248_in_100k_annotation_details.tsv -T 8
 ```
 
 ## Tree refinement
@@ -58,22 +58,22 @@ Refine of a phylogeny by pruning all taxa with inconsistent label compared to th
 ### Phylogenetic insertion using TIPars
 + include processing ancestral lineage annotation
 ```bash
-cd /home/ytye/tipars2_github/Benchmark_datasets/100k
-/home/ytye/tipars2_github/tipars2 --refinement -t 100k_tree_InnodeNameAdded.nwk -s 100k_taxa.fas -a 100k_anc.fas --label 100k_pangolin.tsv --output refined_tree.nwk -T 8 -x 8G
+cd /home/ytye/f1ala_github/Benchmark_datasets/100k
+/home/ytye/f1ala_github/f1ala --refinement -t 100k_tree_InnodeNameAdded.nwk -s 100k_taxa.fas -a 100k_anc.fas --label 100k_pangolin.tsv --output refined_tree.nwk -T 8 -x 8G
 ```
 
 +  exclude processing ancestral lineage annotation that could be computed by other methods, e.g. PastML and matUtils
 ```bash
-cd /home/ytye/tipars2_github/Benchmark_datasets/100k
-/home/ytye/tipars2_github/tipars2 --refinement_from_annotation -t 100k_tree_InnodeNameAdded.nwk -s 100k_taxa.fas -a 100k_anc.fas --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output refined_tree.nwk -T 8 -x 8G
+cd /home/ytye/f1ala_github/Benchmark_datasets/100k
+/home/ytye/f1ala_github/f1ala --refinement_from_annotation -t 100k_tree_InnodeNameAdded.nwk -s 100k_taxa.fas -a 100k_anc.fas --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output refined_tree.nwk -T 8 -x 8G
 ```
 
 ### Phylogenetic insertion using UShER 
 +  use the [#consistent_taxa]_removedTree.nwk after ancestral lineage annotation by TIPars2
 ```bash
-cd /home/ytye/tipars2_github/Benchmark_datasets/100k
-/home/ytye/tipars2_github/tipars2 --annotation -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 1248_in_100k_annotation.tsv -T 8
-/home/ytye/tipars2_github/tipars2 --annotation_details -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output 1248_in_100k_annotation_details.tsv -T 8
+cd /home/ytye/f1ala_github/Benchmark_datasets/100k
+/home/ytye/f1ala_github/f1ala --annotation -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 1248_in_100k_annotation.tsv -T 8
+/home/ytye/f1ala_github/f1ala --annotation_details -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv --assignment 1248_in_100k_annotation.tsv --output 1248_in_100k_annotation_details.tsv -T 8
 usher -v taxa.vcf -t 81784_removedTree.tree -d ./usher -o ./usher/81784_AddTo_100k.pb
 ```
 + The refined tree by UShER is ./usher/final-tree.nh.
@@ -85,8 +85,8 @@ Small clusters (<smallClusterLimit) and bubbles (<smallBubbleLimit) will be merg
 Clusters will link to bubbles.
 
 ```bash
-cd /home/ytye/tipars2_github/Benchmark_datasets/100k
-/home/ytye/tipars2_github/tipars2 --tree_BFS -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 100k_tree_bfs.tsv --exploreTreeNodeLimit 2000 --smallBubbleLimit 5 --smallClusterLimit 5 -T 8 
+cd /home/ytye/f1ala_github/Benchmark_datasets/100k
+/home/ytye/f1ala_github/f1ala --tree_BFS -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 100k_tree_bfs.tsv --exploreTreeNodeLimit 2000 --smallBubbleLimit 5 --smallClusterLimit 5 -T 8 
 ```
 + Output tsv file includes 8 items.
 1. bubble_type : 1 is cluster and 2 is bubble
