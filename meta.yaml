@@ -13,14 +13,14 @@ package:
   name: f1ala
   version: '1.0'
 source:
-  path: /mnt/c/Users/user/documents/isaac/TIPars2
+  path: /mnt/c/Users/isaac/Documents/F1ALA
 build:
-  number: '5'
+  number: '6'
   script:
     - mkdir -p $PREFIX/bin
-    - cp $RECIPE_DIR/TIPars2.jar $PREFIX/bin/
-    - cp $RECIPE_DIR/tipars2 $PREFIX/bin/
-    - cp $RECIPE_DIR/tipars2.py $PREFIX/bin/
+    - cp $RECIPE_DIR/F1ALA.jar $PREFIX/bin/
+    - cp $RECIPE_DIR/f1ala $PREFIX/bin/
+    - cp $RECIPE_DIR/f1ala.py $PREFIX/bin/
     - mkdir -p $PREFIX/bin/lib
     - cp $RECIPE_DIR/lib/* $PREFIX/bin/lib/
     - mkdir -p $PREFIX/bin/visual
