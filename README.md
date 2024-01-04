@@ -24,8 +24,7 @@ For conda installation,
 ```bash
 conda create -n f1ala
 conda activate f1ala
-conda config --add channels f1ala
-conda install f1ala
+conda install yong_tao::f1ala
 ```
 
 # Quick Usage
