@@ -4187,6 +4187,7 @@ public class TIPars {
 		
 		//regenerate a subtree contains all vertix.nodelist 
 		ArrayList<FlexibleNode> removeNodes = new ArrayList<FlexibleNode>();
+		ArrayList<String> removenames = new ArrayList<String>();
 		for(int i = 0; i < reroottree.getExternalNodeCount(); ++i)
 		{
 			FlexibleNode node = (FlexibleNode) reroottree.getExternalNode(i);
@@ -4194,20 +4195,73 @@ public class TIPars {
 			if(!vertix.getValue().SampleList.contains(myNode2seqName.get(node))) 
 			{
 				removeNodes.add(node);
+				removenames.add(myNode2seqName.get(node));
 			}
 		}
 				
 		Tree prundedtree = removeTaxonReturnTree((FlexibleTree) reroottree, removeNodes);
+		ArrayList<String> prundedtree_taxanames = new ArrayList<String>();
+		for (int i = 0; i < prundedtree.getExternalNodeCount(); i++) {
+			FlexibleNode n = (FlexibleNode) prundedtree.getExternalNode(i);
+			prundedtree_taxanames.add(n.getTaxon().getId());
+		}
 		
+		//remove again
+		if(!(vertix.getValue().SampleList.containsAll(prundedtree_taxanames) && 
+				prundedtree_taxanames.containsAll(vertix.getValue().SampleList)))
+		{
+	        removeNodes.clear();
+	        for (int i = 0; i < prundedtree.getExternalNodeCount(); i++) {
+				FlexibleNode n = (FlexibleNode) prundedtree.getExternalNode(i);
+				String sequenceName = n.getTaxon().getId();
+				if(!vertix.getValue().SampleList.contains(sequenceName))
+				{
+					removeNodes.add(n);
+				}
+			}
+	        prundedtree = removeTaxonReturnTree((FlexibleTree) prundedtree, removeNodes);
+		}
+		
+		/*
+		//check taxa match with prundedtree
+		int validCount = 0;
+		HashSet<String> taxanames = new HashSet<String>();
 		for (int i = 0; i < prundedtree.getExternalNodeCount(); i++) {
 			FlexibleNode n = (FlexibleNode) prundedtree.getExternalNode(i);
 			String sequenceName = n.getTaxon().getId();
-			//if(!vertix.getValue().SampleList.contains(sequenceName)) System.out.println(sequenceName + " not found");
+			taxanames.add(sequenceName);
+			if(vertix.getValue().SampleList.contains(sequenceName))
+			{
+				validCount++;
+			}
+			else
+			{
+				System.out.println(bubbleId + " different " + sequenceName + " in tree but not in sampleList");
+				
+			}
 		}
-		
-		//System.out.println(reroottree.getExternalNodeCount() + "-" + removeNodes.size() + " = " + prundedtree.getExternalNodeCount());
-		//System.out.println("processing " + bubbleId + " with #taxa " + vertix.getValue().SampleList.size());
-		
+		for(int i = 0; i < vertix.getValue().SampleList.size(); ++i)
+		{
+			String sequenceName = vertix.getValue().SampleList.get(i);
+			if(!taxanames.contains(sequenceName)) 
+			{
+				System.out.println(bubbleId + " different " + sequenceName + " in sampleList but not in prunded tree");
+				for(int j = 0; j < reroottree.getExternalNodeCount(); ++j)
+				{
+					FlexibleNode node = (FlexibleNode) reroottree.getExternalNode(j);
+					String name = myNode2seqName.get(node);
+					if(name.equals(sequenceName))
+					{
+						System.out.println("however " + sequenceName + " in rooted tree");
+						if(removenames.contains(sequenceName))
+							System.out.println("because " + sequenceName + " in remove names");
+						break;
+					}
+				}
+						
+			}
+		}
+        */
 		myNode2seqName = setupNode2seqName(prundedtree);
 		
 		HashMap<String, HashSet<String>> stratification = stratifyTree(prundedtree, exploreTreeNodeLimit, myNode2seqName);
@@ -4955,8 +5009,9 @@ public class TIPars {
 	            }
 	            
 	            HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples = myAdd.annotationStatistics(clade2samples, assignmentNode2Clade, seqName2node, taxaNames, printDisInfoOnScreen, false);
+
 	            HashMap<FlexibleNode, HashMap<String, HashSet<String>>> stratification = stratifyTree(tree, assignedNode2Samples, exploreTreeNodeLimit, smallBubbleLimit, smallClusterLimit, seqName2node);
-				writeAllStratification2TSV(stratification, assignedNode2Samples, assignmentNode2Clade, seqName2node, outfn);
+	            writeAllStratification2TSV(stratification, assignedNode2Samples, assignmentNode2Clade, seqName2node, outfn);
 			}
 			
 			long endTime2 = System.currentTimeMillis();
