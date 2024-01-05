@@ -39,7 +39,7 @@ cd /home/ytye/f1ala_github/Benchmark_datasets/100k
 
 ## Annotation statistics and visualization 
 
-+ Write the annotation details to the output file, including annotated_node, annotated_node_precedor, distance_to_root, pangolineage, F1score and samples.
++ Write the annotation details to the output file, including annotation_node, annotation_node_precedor, distance_to_root, pangolineage, F1score and samples.
 + Write the annotation visualization to file graph-data-generated.js that should be moved to the provided 'visual' folder and open the 'graph.html' in a browser.
 + Collapse the tree by lineages and write this collapsed tree to file [#lineages]_collapsedTree.nwk.
 + Remove inconsistent taxa and write this pruned tree to file [#consistent_taxa]_removedTree.nwk (used for tree refinement using other phylogenetic insertion methods, e.g., UShER).
@@ -89,8 +89,8 @@ cd /home/ytye/f1ala_github/Benchmark_datasets/100k
 ```
 + Output tsv file includes 8 items.
 1. bubble_type : 1 is cluster and 2 is bubble
-2. annotated_node : root of the subtree for cluster or bubble
-3. annotated_node_precedor : precedor of this annotated_node where precedor is also a cluster or bubble
+2. annotation_node : root of the subtree for cluster or bubble
+3. annotation_node_precedor : precedor of this annotated_node where precedor is also a cluster or bubble
 4. dist_to_precedor : total branch length from annotated_node_precedor to annotated_node
 5. parent_node : parent node of this annotated_node in the input tree
 6. pangolineage : lineage label annotated by 'Ancestral lineage annotation'
