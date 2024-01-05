@@ -90,9 +90,9 @@ cd /home/ytye/f1ala_github/Benchmark_datasets/100k
 + Output tsv file includes 8 items.
 1. bubble_type : 1 is cluster and 2 is bubble
 2. annotation_node : root of the subtree for cluster or bubble
-3. annotation_node_precedor : precedor of this annotated_node where precedor is also a cluster or bubble
-4. dist_to_precedor : total branch length from annotated_node_precedor to annotated_node
-5. parent_node : parent node of this annotated_node in the input tree
+3. annotation_node_precedor : precedor of this annotation_node where precedor is also a cluster or bubble
+4. dist_to_precedor : total branch length from annotation_node_precedor to annotated_node
+5. parent_node : parent node of this annotation_node in the input tree
 6. pangolineage : lineage label annotated by 'Ancestral lineage annotation'
 7. num_nodes : number of nodes in the cluster or bubble
 8. nodes : a list of nodes in the cluster or bubble (separated by comma)
