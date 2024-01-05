@@ -103,7 +103,7 @@ cd /home/ytye/f1ala_github/Benchmark_datasets/100k
 
 # Acknowledgements
 
-This project is supported by the Theme Based Research Scheme (T11-705/21-N), the Hong Kong Research Grants Council General Research Fund (17150816), the NSFC Excellent Young Scientists Fund (Hong Kong and Macau) (31922087),
+This project is supported by the Theme Based Research Scheme (T11-705/21-N), 
 the Health and Medical Research Fund (COVID1903011-549 WP1) and the Innovation and Technology Commission’s InnoHK funding (D<sup>2</sup>4H).
 
 
