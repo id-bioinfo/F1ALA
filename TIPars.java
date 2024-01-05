@@ -2660,7 +2660,7 @@ public class TIPars {
 	
 	public static void writeAssignCladeAndTaxa(String fn, HashMap<FlexibleNode, String> assignedNode2Clade, HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples) {
 		StringBuilder buffer = new StringBuilder();
-		buffer.append("annotated_node\tannotated_node_precedor\tdist_to_root\tpangolineage\tF1score\tsamples\n");
+		buffer.append("annotation_node\tannotation_node_precedor\tdist_to_root\tpangolineage\tF1score\tsamples\n");
 		ArrayList<FlexibleNode> ancestorList = new ArrayList<FlexibleNode>();
 		HashMap<FlexibleNode, FlexibleNode> assignedNode2parent = new HashMap<FlexibleNode, FlexibleNode>();
 		for (HashMap.Entry<FlexibleNode, ScoreAndStringList> entry : assignedNode2Samples.entrySet()) {
@@ -3024,7 +3024,7 @@ public class TIPars {
 			assignedNode2Samples.get(annotated_node).F1Score = 2 * Precision * Recall / (Precision + Recall);
 		}
 		
-		System.out.printf("INFO: %d out of %d clade/lineages have been annotated.%n", assignmentNode2Clade.size(), clade2samples.size());
+		System.out.printf("INFO: %d out of %d lineages have been annotated.%n", assignmentNode2Clade.size(), clade2samples.size());
 		System.out.printf("INFO: %d out of %d samples have been assigned with true predictions %d.%n", assignedSamples, totalSamples, truePossitive);	
 		
 		//get back all taxa samples in the tree but not in the given clade2samples by users
@@ -4438,18 +4438,94 @@ public class TIPars {
 		return new_stratification;
 	}
 	
+	public static void mergeUnAssignedTips(HashMap<FlexibleNode, HashMap<String, HashSet<String>>> stratification, HashMap<String, FlexibleNode> seqName2node)
+	{
+		//merge those unassigned-lineage taxa to the stratification
+		//based on the minimum distance to the bubble nodes
+		
+		//all taxa names in the tree
+		HashSet<String> allTaxaNames = new HashSet<String>();
+		for (int i = 0; i < mytree.getExternalNodeCount(); i++) {
+			FlexibleNode n = (FlexibleNode) mytree.getExternalNode(i);
+			String sequenceName = node2seqName.get(n);
+			allTaxaNames.add(sequenceName);
+		}
+		
+		//all assigned taxa names
+		HashSet<String> assignedTaxaNames = new HashSet<String>();
+		HashMap<FlexibleNode, FlexibleNode> bubbleNode2annotationNode = new HashMap<FlexibleNode, FlexibleNode>(); //bubble node map to ancestral lineage annotation node
+		for(Entry<FlexibleNode, HashMap<String, HashSet<String>>> entry : stratification.entrySet())
+		{
+			for(Entry<String, HashSet<String>> entry1 : entry.getValue().entrySet())
+			{
+				String bubblename = entry1.getKey();
+				bubbleNode2annotationNode.put(seqName2node.get(bubblename), entry.getKey());
+				for(String entry2 : entry1.getValue())
+				{
+					//it is a taxon and is not in assignedTaxaNames
+					if(allTaxaNames.contains(entry2) && !assignedTaxaNames.contains(entry2))
+					{
+						assignedTaxaNames.add(entry2);
+					}
+				}
+			}
+		}
+		
+		//get all unassigned taxa
+		HashSet<FlexibleNode> assignedTaxa = new HashSet<FlexibleNode>();
+		for (int i = 0; i < mytree.getExternalNodeCount(); i++) {
+			FlexibleNode n = (FlexibleNode) mytree.getExternalNode(i);
+			String sequenceName = node2seqName.get(n);
+			//it is unassigned, then find its closest bubbleId
+			if(!assignedTaxaNames.contains(sequenceName))
+			{
+				double min_distance = 10000;
+				//FlexibleNode bubble_node_to_select = null;
+				FlexibleNode annotation_node_to_select = null;
+				String bubble_node_name_to_select = null;
+				for(Entry<FlexibleNode, FlexibleNode> entry : bubbleNode2annotationNode.entrySet())
+				{
+					FlexibleNodeBranch nb = returnCommonAncestor(entry.getKey(), n, mytree);
+					if(nb.b < min_distance)
+					{
+						min_distance = nb.b;
+						bubble_node_name_to_select = node2seqName.get(entry.getKey());
+						annotation_node_to_select = entry.getValue();
+					}
+				}
+				if(bubble_node_name_to_select != null) //assigned this taxon to the bubble_node_to_select under annotation_node_to_select
+				{
+					stratification.get(annotation_node_to_select).get(bubble_node_name_to_select).add(sequenceName);
+				}
+				else
+				{
+					//can not merge entry, so to create a new annotation node for it
+					HashMap<String, HashSet<String>> temp = new HashMap<String, HashSet<String>>();
+					temp.put(sequenceName, new HashSet<String>());
+					temp.get(sequenceName).add(sequenceName);
+					stratification.put(n, temp);
+				}
+			}
+		}
+		//return stratification;
+	}
+
+
+	
 	/*
-	 * three types of bubbles
-	 * 1: the first (highest) level, output by TIPars2 annotation, # > smallClusterLimit
+	 * two types of bubbles
+	 * 1: the first (highest) level, output by F1ALA annotation, # > smallClusterLimit
 	 * 2: the second level, stratify for those large bubbles in level1 (# > exploreTreeNodeLimit)
 	 */
 	public static void writeAllStratification2TSV(HashMap<FlexibleNode, HashMap<String, HashSet<String>>> allstratification,  HashMap<FlexibleNode, ScoreAndStringList> id2PajekVectix, HashMap<FlexibleNode, String> assignedNode2Clade, HashMap<String, FlexibleNode> seqName2node, String outfile) 
 	{
 		try {
 			StringBuilder buffer = new StringBuilder();
-			buffer.append("bubble_type\tannotated_node\tannotated_node_precedor\tdist_to_precedor\tparent_node\tpangolineage\tnum_nodes\tnodes\n");
+			buffer.append("bubble_type\tannotation_node\tannotation_node_precedor\tdist_to_precedor\tparent_node\tpangolineage\tnum_nodes\tnodes\n");
 			HashSet<FlexibleNode> allHighestBubbles = new HashSet<FlexibleNode>(allstratification.keySet());
 			ArrayList<FlexibleNode> allAncestors = new ArrayList<FlexibleNode>();
+			int bubble_node_count = 0;
+            int max_bubble_node = 0;
 			for(Entry<FlexibleNode, HashMap<String, HashSet<String>>> allentry : allstratification.entrySet())
 			{
 				FlexibleNode pajekVectixIdx = allentry.getKey();
@@ -4470,12 +4546,14 @@ public class TIPars {
 				String top_bubbleId = bubbleId;
 				
 				//the parent of root is set to be null
+				bubble_node_count++;
 				buffer.append(1 + "\t" + top_bubbleId + "\t" + (preAncestor != pajekVectixIdx? node2seqName.get(preAncestor) : "null") + "\t" + dist_to_preAncestor);
 				
                 if (!pajekVectixIdx.isRoot())	buffer.append("\t" + node2seqName.get(pajekVectixIdx.getParent())); //parent_node
                 else buffer.append("\tnull");
                 
-                String ancestral_state = assignedNode2Clade.get(pajekVectixIdx);
+                String ancestral_state = "unknown";
+                if(assignedNode2Clade.containsKey(pajekVectixIdx)) ancestral_state = assignedNode2Clade.get(pajekVectixIdx);
                 buffer.append("\t" + ancestral_state); //pangolineage
                 
 				HashMap<String, HashSet<String>> stratification = allentry.getValue();
@@ -4492,6 +4570,7 @@ public class TIPars {
 					else
 						buffer.append(nodeName + "\n");
 				}
+				if(max_bubble_node < count) max_bubble_node = count;
 					
 				if(stratification.size() > 1)
 				{						
@@ -4512,6 +4591,7 @@ public class TIPars {
 								}
 								dist_to_preAncestor += allAncestors.get(i).getLength();
 							}
+							bubble_node_count++;
 							buffer.append(2 + "\t" + entry.getKey() + "\t" + ((annotated_node_preAncestor != annotated_node)? node2seqName.get(annotated_node_preAncestor) : "null") + "\t" + dist_to_preAncestor);
 							if (!annotated_node.isRoot())	buffer.append("\t" + node2seqName.get(annotated_node.getParent())); //parent_node
 			                else buffer.append("\tnull");
@@ -4529,10 +4609,15 @@ public class TIPars {
 								else
 									buffer.append(nodeName + "\n");
 							}
+							if(max_bubble_node < count) max_bubble_node = count;
 						}
 					}
 				}
 			}
+			
+            
+            System.out.printf("INFO: Total %d bubbles with maximum %d internal and external nodes in a bubble.%n", bubble_node_count, max_bubble_node);
+            
 			PrintStream out = new PrintStream(new FileOutputStream(new File(outfile)));
 			out.println(buffer.toString());
 			out.close();
@@ -4583,7 +4668,9 @@ public class TIPars {
 		int exploreTreeNodeLimit = 2000;
 		int smallBubbleLimit = 100;
 		int smallClusterLimit = 10;
+		boolean isOutputUnAnnotaionTips = true;
 		
+		//global
 		String nidname = "label";
 		String attname = "GenName";
 		boolean printDisInfoOnScreen = true;
@@ -4656,8 +4743,8 @@ public class TIPars {
 				exploreTreeNodeLimit = Integer.parseInt(args[3]);
 				smallBubbleLimit = Integer.parseInt(args[4]);
 				smallClusterLimit = Integer.parseInt(args[5]);
+				isOutputUnAnnotaionTips = Boolean.parseBoolean(args[6]);
 			}
-				 
 			
 			if (otype.equals("insertion") || otype.equals("placement") || otype.equals("refinement") || otype.equals("refinement_from_annotation"))
 			{
@@ -5009,8 +5096,12 @@ public class TIPars {
 	            }
 	            
 	            HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples = myAdd.annotationStatistics(clade2samples, assignmentNode2Clade, seqName2node, taxaNames, printDisInfoOnScreen, false);
-
 	            HashMap<FlexibleNode, HashMap<String, HashSet<String>>> stratification = stratifyTree(tree, assignedNode2Samples, exploreTreeNodeLimit, smallBubbleLimit, smallClusterLimit, seqName2node);
+	            if(isOutputUnAnnotaionTips)
+	            {
+	            	mergeUnAssignedTips(stratification, seqName2node);
+	            	System.out.println("INFO: Samples with unassigned annotation were merge to the closest bubble nodes.");
+	            }
 	            writeAllStratification2TSV(stratification, assignedNode2Samples, assignmentNode2Clade, seqName2node, outfn);
 			}
 			
