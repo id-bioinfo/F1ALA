@@ -105,7 +105,7 @@ After the graft, the final tree is rooting by midpoint outgroup ([link](http://e
 
 ```bash
 cd /home/ytye/f1ala_github/Benchmark_datasets/subtrees
-/home/ytye/f1ala_github/f1ala --graft_subtrees -t bigtree.nwk -st subtrees.tsv -og A -o merge.nwk -ps true
+/home/ytye/f1ala_github/f1ala --graft_subtrees -t bigtree.nwk --subtrees subtrees.tsv --outgroup A --output merge.nwk --print2screen true
 ```
 
 # How to Cite
