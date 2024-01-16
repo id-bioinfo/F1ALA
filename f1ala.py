@@ -13,6 +13,7 @@ parser.add_argument("-annotation_details", "--annotation_details", action='store
 parser.add_argument("-refinement", "--refinement", action='store_true', help="refine the tree by annotation and inconsistent tips re-insertion")
 parser.add_argument("-refinement_from_annotation", "--refinement_from_annotation", action='store_true', help="refine the tree by given annotation")
 parser.add_argument("-tree_BFS", "--tree_BFS", action='store_true', help="collapse tree to bubbles")
+parser.add_argument("-graft_subtrees", "--graft_subtrees", action='store_true', help="graft subtrees to a bigtree")
 
 parser.add_argument("-t", "--tree", help = "tree file, in Newick format")
 parser.add_argument("-s", "--sequence", help="fasta/vcf file contains aligned taxa sequences")
@@ -36,6 +37,10 @@ parser.add_argument("-nl", "--exploreTreeNodeLimit", default="2000", help="maxim
 parser.add_argument("-bl", "--smallBubbleLimit", default="5", help="minimal nodes in a bubble for BFS (default = 5)")
 parser.add_argument("-cl", "--smallClusterLimit", default="5", help="minimal nodes in a cluster for annotation (default = 5)")
 parser.add_argument("-at", "--isOutputUnAnnotaionTips", default="true", help="set 'true' (default; otherwise 'fasle') to indiacte output all taxa no matter they have not been assigned to any ancestral lineage annotation")
+
+#graft subtrees
+parser.add_argument("-st", "--subtrees", help="a tsv file contains the subtree filenames and anchors")
+parser.add_argument("-og", "--outgroup", help="outgroup name")
 
 #java
 parser.add_argument("-x", "--xmx", default="4G", help="Java Xmx setting, e.g.,1G,8G")
@@ -76,7 +81,11 @@ if args.refinement_from_annotation:
 
 if args.tree_BFS:
     cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " tree_BFS " + args.tree + " " + \
-        args.label + " " + " " + args.exploreTreeNodeLimit + " " + " " + args.smallBubbleLimit + " " + args.smallClusterLimit + " " + \
+        args.label + " " + " " + args.exploreTreeNodeLimit + " " + args.smallBubbleLimit + " " + args.smallClusterLimit + " " + \
         args.isOutputUnAnnotaionTips + " " + args.output + " " + args.print2screen + " " + args.threads
-    
+
+if args.graft_subtrees:
+    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " graft_subtrees " + args.tree + " " + \
+        args.subtrees + " " + args.outgroup + " " + args.output + " " + args.print2screen + " " + args.threads
+        
 os.system(cmd)
