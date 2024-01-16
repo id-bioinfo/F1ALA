@@ -2044,6 +2044,13 @@ public class TIPars {
 			}
 		}
 	}
+	
+	public static String toNewick(Tree tree) {
+		StringBuilder buffer = new StringBuilder();
+		toNewick(tree, (FlexibleNode) tree.getRoot(), buffer, "insertion");
+		return buffer.toString();
+	}
+
 
 	private static void appendEdgeNumber(StringBuilder buffer, FlexibleNode node, String otype) {
 		if (otype.equals("placement")) {
@@ -3683,7 +3690,234 @@ public class TIPars {
 		return outtree;
 	}
 	
-	//to do in the future 
+	public static void GraftSubtrees(ArrayList<String[]> subtreeMetaList, String outgroup_seq, boolean printDisInfoOnScreen) throws InterruptedException, IOException, ImportException
+	{
+		double global_scale = 0;
+		for (int i = 0; i < subtreeMetaList.size(); i++) 
+		{
+			String subtree_file = subtreeMetaList.get(i)[0];
+			String anchor_seq = subtreeMetaList.get(i)[1]; //must be a taxon
+			// read tree
+			NewickImporter tni = new NewickImporter(new FileReader(subtree_file));
+			Tree subtree = tni.importTree(null);
+			if(printDisInfoOnScreen)
+				System.out.printf("INFO: graft subtree with %d taxa in file %s.\n", subtree.getExternalNodeCount(), subtree_file);
+			
+			if (subtree.getExternalNodeCount() <= 2) continue; //if there are only two taxa, then they are already in the bigtree
+				
+			//get anchor nodes
+			FlexibleNode subtree_anchor_node = null;
+			FlexibleNode subtree_outgroup_node = null;
+			for (int j = 0; j < subtree.getExternalNodeCount(); j++) {
+				FlexibleNode n = (FlexibleNode) subtree.getExternalNode(j);
+				String seqName = n.getTaxon().getId();
+				//System.out.println(seqName);
+				if(seqName.equals(anchor_seq)) subtree_anchor_node = n;
+				if(seqName.equals(outgroup_seq)) subtree_outgroup_node = n;
+			}
+			if(subtree_anchor_node == null || subtree_outgroup_node == null)
+			{
+				System.out.printf("ERROR: one of anchor nodes %s and %s is not in the subtree %s.\n", anchor_seq, outgroup_seq, subtree_file);
+				continue;
+			}
+			
+			FlexibleNode tree_anchor_node = null;
+			FlexibleNode tree_outgroup_node = null;
+			for (int j = 0; j < mytree.getExternalNodeCount(); j++) {
+				FlexibleNode n = (FlexibleNode) mytree.getExternalNode(j);
+				String seqName = n.getTaxon().getId();
+				if(seqName.equals(anchor_seq)) tree_anchor_node = n;
+				if(seqName.equals(outgroup_seq)) tree_outgroup_node = n;
+			}
+			if(tree_anchor_node == null || tree_outgroup_node == null)
+			{
+				System.out.printf("ERROR: one of anchor nodes %s and %s is not in the bigtree %s.\n", anchor_seq, outgroup_seq);
+				continue;
+			}
+			//let the branch length of outgroup be zero
+			if(tree_outgroup_node.getLength() > MinDoubleNumLimit)
+			{
+				FlexibleNode tree_root = (FlexibleNode)mytree.getRoot();
+				int num_nodes = tree_root.getChildCount(); 
+				global_scale = tree_outgroup_node.getLength();
+				for(int j = 0; j < num_nodes; ++j)
+				{
+					FlexibleNode n = (FlexibleNode) tree_root.getChild(j);
+					double brLen = n.getLength() + global_scale;
+					n.setLength(brLen);
+				}
+				tree_outgroup_node.setLength(0);
+			}
+			
+			//do sth
+			GraftSubtreesBy2Anchors(subtree, subtree_anchor_node, subtree_outgroup_node, tree_anchor_node, tree_outgroup_node);
+		}
+		
+		FlexibleNode tree_root = (FlexibleNode) mytree.getRoot();
+		int num_nodes = tree_root.getChildCount();
+		double min_br = 10000;
+		for(int j = 0; j < num_nodes; ++j)
+		{
+			FlexibleNode n = (FlexibleNode) tree_root.getChild(j);
+			if(n.isExternal() && n.getTaxon().getId().equals(outgroup_seq)) continue;
+			if(n.getLength() < min_br) min_br = n.getLength();
+		}
+		global_scale = min_br / 2.0; //midpoint_outgroup
+		for(int j = 0; j < num_nodes; ++j)
+		{
+			FlexibleNode n = (FlexibleNode) tree_root.getChild(j);
+			double brLen = n.getLength() - global_scale;
+			if(n.isExternal() && n.getTaxon().getId().equals(outgroup_seq)) brLen = n.getLength() + global_scale;
+			n.setLength(brLen);
+		}
+		//System.out.println(toNewick(mytree));
+	}
+	
+	public static void GraftSubtreesBy2Anchors(Tree subtree, FlexibleNode subtree_anchor_node, FlexibleNode subtree_outgroup_node, FlexibleNode tree_anchor_node, FlexibleNode tree_outgroup_node)
+	{
+		ArrayList<FlexibleNode> ancestors = new ArrayList<FlexibleNode>();
+		get_parents2root(subtree_anchor_node, ancestors);
+		
+		FlexibleNodeBranch subtree_nb = returnCommonAncestor(subtree_anchor_node, subtree_outgroup_node, subtree);
+		FlexibleNodeBranch tree_nb = returnCommonAncestor(tree_anchor_node, tree_outgroup_node, mytree);
+		double scale = 0;
+		int num_nodes = 0;
+		if(subtree_nb.b != tree_nb.b && (subtree_nb.b > MinDoubleNumLimit || tree_nb.b > MinDoubleNumLimit))
+		{
+			num_nodes = subtree.getNodeCount();
+			if(subtree_nb.b > MinDoubleNumLimit && tree_nb.b > MinDoubleNumLimit)
+			{
+				scale = tree_nb.b / subtree_nb.b;
+				for(int i = 0; i < num_nodes; ++i)
+				{
+					FlexibleNode n = (FlexibleNode) subtree.getNode(i);
+					double brLen = n.getLength() * scale;
+					n.setLength(brLen);
+				}
+			}
+			else if (subtree_nb.b < MinDoubleNumLimit)
+			{
+				//add tree_nb.b
+				scale = tree_nb.b;
+				for(int i = 0; i < num_nodes; ++i)
+				{
+					FlexibleNode n = (FlexibleNode) subtree.getNode(i);
+					double brLen = n.getLength() + scale;
+					n.setLength(brLen);
+				}
+			}
+			else if (tree_nb.b < MinDoubleNumLimit)
+			{
+				//minus subtree_nb.b
+				scale = subtree_nb.b;
+				for(int i = 0; i < num_nodes; ++i)
+				{
+					FlexibleNode n = (FlexibleNode) subtree.getNode(i);
+					double brLen = Math.max(n.getLength() - scale, MinDoubleNumLimit);
+					n.setLength(brLen);
+				}
+			}
+		}
+		
+		MyFlexibleTree mynewTree = new TIPars().new MyFlexibleTree(mytree, true);
+		copyAttributeFromOneNodeToAnother((FlexibleNode) mytree.getRoot(), (FlexibleNode) mynewTree.getRoot());
+		
+		int selectedNodeBIndex = tree_anchor_node.getNumber();
+		FlexibleNode tree_currentNode = (FlexibleNode)mynewTree.getNode(selectedNodeBIndex);
+		if(!tree_currentNode.getTaxon().getId().equals(tree_anchor_node.getTaxon().getId()))
+		{
+			System.out.printf("ERROR: difference anchor nodes when copy %s vs %s.\n", tree_currentNode.getTaxon().getId(), tree_anchor_node.getTaxon().getId());
+		}
+		
+		for(int i = 0; i < ancestors.size() - 1; ++i) //don't need to consider subtree_root
+		{
+			//System.out.println("process ancestor " + i);
+			FlexibleNode n = ancestors.get(i);
+			double subtree_brLen = n.getLength();
+			double tree_brLen = tree_currentNode.getLength();
+			
+			while(tree_brLen < subtree_brLen && !tree_currentNode.getParent().isRoot())
+			{
+				tree_currentNode = tree_currentNode.getParent();
+				subtree_brLen -= tree_brLen;
+				tree_brLen = tree_currentNode.getLength();
+				//System.out.println("subtree_brLen " + subtree_brLen);
+				//System.out.println("tree_brLen " + tree_brLen);
+			}
+
+			FlexibleNode selected_nodeB = tree_currentNode;
+			FlexibleNode selected_nodeA = selected_nodeB.getParent();
+			
+			FlexibleNode selected_nodeP = n.getParent();
+			selected_nodeP.removeChild(n); //remove n from selected_nodeP
+			n.setParent(null);
+			if(selected_nodeP.isRoot()) 
+			{
+				selected_nodeP.removeChild(subtree_outgroup_node);
+				subtree_outgroup_node.setParent(null);
+			}
+			if (selected_nodeP.getChildCount() < 1) break;
+			//System.out.println(toNewick(subtree));
+			//System.out.println(toNewick(mynewTree));
+			
+			mynewTree.beginTreeEdit();
+			if(Math.abs(tree_brLen - subtree_brLen) < MinDoubleNumLimit) //add all children under selected_nodeP
+			{
+				for(int j = 0; j < selected_nodeP.getChildCount(); ++j)
+				{
+					FlexibleNode child = selected_nodeP.getChild(j).getDeepCopy();
+					selected_nodeA.addChild(child);
+					child.setParent(selected_nodeA);
+				}
+				tree_currentNode = selected_nodeA;
+			}
+			else // (subtree_brLen < tree_brLen) //insert node P at branch from A to B
+			{
+				selected_nodeP = selected_nodeP.getDeepCopy();
+				selected_nodeP.setLength(tree_brLen - subtree_brLen);
+				selected_nodeP.addChild(selected_nodeB);
+				selected_nodeP.setParent(selected_nodeA);
+
+				selected_nodeA.removeChild(selected_nodeB);
+				selected_nodeA.addChild(selected_nodeP);
+				
+				selected_nodeB.setParent(selected_nodeP);
+				selected_nodeB.setLength(subtree_brLen);
+				
+				tree_currentNode = selected_nodeP;
+			}
+			
+			mynewTree.endTreeEdit();
+			mynewTree.toAdoptNodes((FlexibleNode) mynewTree.getRoot());
+			//System.out.println(toNewick(subtree));
+			//System.out.println(toNewick(mynewTree));
+		}
+		
+		mytree = mynewTree;
+	}
+	
+	public static ArrayList<String[]> readSubTreeFileAndAnchor(String fn) {
+		ArrayList<String[]> subtreeMetaList = new ArrayList<String[]>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fn)));
+			String oneline = null;
+			while ((oneline = br.readLine()) != null) {
+				if (oneline.isEmpty())
+					continue;
+				String[] words = oneline.trim().split("\\s+");
+				if (words.length == 2) {
+					subtreeMetaList.add(words);
+				} else {
+					System.out.println("WARNNING: get a wrong format of metadata for graft subtrees " + oneline);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return subtreeMetaList;
+	}
+	
+	//to do in the future, that will call IQTREE2
 	public Tree doGraftSubtrees(HashMap<Integer, String> queryList, boolean printDisInfoOnScreen) throws InterruptedException
 	{
 		ArrayList<Integer> queryIdxs = new ArrayList<Integer>(queryList.keySet());
@@ -4651,6 +4885,8 @@ public class TIPars {
 	public static void main(String[] args) {
 		
 		Runtime run = Runtime.getRuntime();
+		run.gc();
+		long startMem = run.totalMemory();
 		long startTime = System.currentTimeMillis();
 		
 		String insfn = "";
@@ -4669,6 +4905,8 @@ public class TIPars {
 		int smallBubbleLimit = 100;
 		int smallClusterLimit = 10;
 		boolean isOutputUnAnnotaionTips = true;
+		//outgroup seqname
+		String outgroup_name = "";
 		
 		//global
 		String nidname = "label";
@@ -4746,6 +4984,12 @@ public class TIPars {
 				isOutputUnAnnotaionTips = Boolean.parseBoolean(args[6]);
 			}
 			
+			if(otype.equals("graft_subtrees"))
+			{
+				inqfn = args[2]; //a tsv file contains subtree file and anchor seq_name
+				outgroup_name = args[3]; //a string as the outgroup name
+			}
+
 			if (otype.equals("insertion") || otype.equals("placement") || otype.equals("refinement") || otype.equals("refinement_from_annotation"))
 			{
 				aa_flag = Boolean.parseBoolean(args[args.length - 5]);
@@ -4824,9 +5068,15 @@ public class TIPars {
 				assignmentNodeName2Clade = readAnnotations(annotation_assignment);
 			}
 			
+			ArrayList<String[]> subtreeMetaList = null;
+			if (otype.equals("graft_subtrees"))
+			{
+				subtreeMetaList = readSubTreeFileAndAnchor(inqfn);
+			}
+			
 			long startTime2 = System.currentTimeMillis();
 			
-			System.out.println("F1ALA: ultrafast and memory-efficient Ancestral Lineage Annotation for huge SARS-CoV-2 phylogeny using F1-score");
+			System.out.println("F1ALA: ultrafast and memory-efficient ancestral lineage annotation applied for the huge SARS-CoV-2 phylogeny");
 			System.out.println("Progress: " + otype);
 
 			String progressInfo = "";
@@ -5103,6 +5353,14 @@ public class TIPars {
 	            	System.out.println("INFO: Samples with unassigned annotation were merge to the closest bubble nodes.");
 	            }
 	            writeAllStratification2TSV(stratification, assignedNode2Samples, assignmentNode2Clade, seqName2node, outfn);
+			}
+			else if (otype.equals("graft_subtrees"))
+			{
+				System.out.println("TreeFile: " + intfn);
+	            System.out.println("SubtreeMetaDataFile: " + inqfn);
+	            System.out.println("Outgroup: " + outgroup_name);
+				GraftSubtrees(subtreeMetaList, outgroup_name, printDisInfoOnScreen);
+				outtree = mytree;
 			}
 			
 			long endTime2 = System.currentTimeMillis();
