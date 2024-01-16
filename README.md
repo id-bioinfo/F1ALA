@@ -97,6 +97,17 @@ cd /home/ytye/f1ala_github/Benchmark_datasets/100k
 7. num_nodes : number of nodes in the cluster or bubble
 8. nodes : a list of nodes in the cluster or bubble (separated by comma)
 
+## Graft subtrees (to be done)
+Graft a set of subtrees to a bigtree. Subtrees and the bigtree should have two common samples as anchors.
+One anchor is used for outgroup rooting in all provided subtrees and bigtree.
+The graft method will scale the branch length of subtrees to match the big tree based on the distance of two anchors.
+After the graft, the final tree is rooting by midpoint outgroup ([link](http://etetoolkit.org/docs/latest/tutorial/tutorial_trees.html#getting-midpoint-outgroup)).
+
+```bash
+cd /home/ytye/f1ala_github/Benchmark_datasets/subtrees
+/home/ytye/f1ala_github/f1ala --graft_subtrees -t bigtree.nwk -st subtrees.tsv -og A -o merge.nwk -ps true
+```
+
 # How to Cite
 
 
