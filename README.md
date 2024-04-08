@@ -37,9 +37,7 @@ cd /home/ytye/f1ala_github/Benchmark_datasets/100k
 /home/ytye/f1ala_github/f1ala --annotation -t 100k_tree_InnodeNameAdded.nwk --label 100k_pangolin.tsv  --output 1248_in_100k_annotation.tsv -T 8 
 ```
 
-*
-N.B. When encountering StackOverflowError problem, please reset Java settings Xmx,Xms,Xss to be larger [Details](https://cjlr.srm.covisint.com/enovia/docv6/English/CsrlogsAdminMap/csrlogs-c-jvm-options.htm).
-*
+_N.B. When encountering StackOverflowError problems, please reset Java settings [--xmx,--xms,--xss](https://cjlr.srm.covisint.com/enovia/docv6/English/CsrlogsAdminMap/csrlogs-c-jvm-options.htm) to be larger._
 
 ## Annotation statistics and visualization 
 
