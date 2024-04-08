@@ -43,8 +43,10 @@ parser.add_argument("-st", "--subtrees", help="a tsv file contains the subtree f
 parser.add_argument("-og", "--outgroup", help="outgroup name")
 
 #java
-parser.add_argument("-x", "--xmx", default="4G", help="Java Xmx setting, e.g.,1G,8G")
-parser.add_argument('-v','--version', action='version', version='TIPars v2.0.0')
+parser.add_argument("-xmx", "--xmx", default="4G", help="Java Xmx setting, e.g.,1G,2G,4G,8G")
+parser.add_argument("-xms", "--xms", default="512M", help="Java Xms setting, e.g.,512M,1G,2G,4G")
+parser.add_argument("-xss", "--xss", default="1M", help="Java Xss setting, e.g.,512K,1M,2M,4M")
+parser.add_argument('-v','--version', action='version', version='F1ALA v2.1.0')
 
 args = parser.parse_args()
 
@@ -52,40 +54,40 @@ exec_dir = os.path.dirname(__file__)
 ## print(exec_dir)
 
 if args.insertion:
-    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " insertion " + args.tree + " " + \
-        args.sequence + " " + args.ancseq + " " + args.query + " " + args.format + " " + args.multiplacement + " " + \
+    cmd = "java -jar -Xmx" + args.xmx + " -Xms" + args.xms + " -Xss" + args.xss + " " + exec_dir + "/F1ALA.jar" + " insertion " + \
+        args.tree + " " + args.sequence + " " + args.ancseq + " " + args.query + " " + args.format + " " + args.multiplacement + " " + \
         str(args.aa) + " " + args.checkpoint + " " + args.output + " " + args.print2screen + " " + args.threads
         
 if args.placement:
-    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " placement " + args.tree + " " + \
-        args.sequence + " " + args.ancseq + " " + args.query + " " + args.format + " " + args.multiplacement + " " + \
+    cmd = "java -jar -Xmx" + args.xmx + " -Xms" + args.xms + " -Xss" + args.xss + " " + exec_dir + "/F1ALA.jar" + " placement " + \
+        args.tree + " " + args.sequence + " " + args.ancseq + " " + args.query + " " + args.format + " " + args.multiplacement + " " + \
         str(args.aa) + " " + args.output + " " + args.print2screen + " " + args.threads
         
 if args.annotation:
-    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " annotation " + args.tree + " " + \
-        args.label + " " + args.fscore + " " + args.output + " " + args.print2screen + " " + args.threads
+    cmd = "java -jar -Xmx" + args.xmx + " -Xms" + args.xms + " -Xss" + args.xss + " " + exec_dir + "/F1ALA.jar" + " annotation " + \
+        args.tree + " " + args.label + " " + args.fscore + " " + args.output + " " + args.print2screen + " " + args.threads
         
 if args.annotation_details:
-    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " annotation_details " + args.tree + " " + \
-        args.label + " " + args.assignment + " " + args.output + " " + args.print2screen + " " + args.threads
+    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " annotation_details " + \
+        args.tree + " " + args.label + " " + args.assignment + " " + args.output + " " + args.print2screen + " " + args.threads
         
 if args.refinement:
-    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " refinement " + args.tree + " " + \
-        args.sequence + " " + args.ancseq + " " + args.label + " " + args.format + " " + \
+    cmd = "java -jar -Xmx" + args.xmx + " -Xms" + args.xms + " -Xss" + args.xss + " " + exec_dir + "/F1ALA.jar" + " refinement " + \
+        args.tree + " " + args.sequence + " " + args.ancseq + " " + args.label + " " + args.format + " " + \
         str(args.aa) + " " + args.checkpoint + " " + args.output + " " + args.print2screen + " " + args.threads
         
 if args.refinement_from_annotation:
-    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " refinement_from_annotation " + args.tree + " " + \
-        args.sequence + " " + args.ancseq + " " + args.label + " " + args.format + " " + args.assignment + " " + \
+    cmd = "java -jar -Xmx" + args.xmx + " -Xms" + args.xms + " -Xss" + args.xss + " " + exec_dir + "/F1ALA.jar" + " refinement_from_annotation " + \
+        args.tree + " " + args.sequence + " " + args.ancseq + " " + args.label + " " + args.format + " " + args.assignment + " " + \
         str(args.aa) + " " + args.checkpoint + " " + args.output + " " + args.print2screen + " " + args.threads   
 
 if args.tree_BFS:
-    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " tree_BFS " + args.tree + " " + \
-        args.label + " " + " " + args.exploreTreeNodeLimit + " " + args.smallBubbleLimit + " " + args.smallClusterLimit + " " + \
+    cmd = "java -jar -Xmx" + args.xmx + " -Xms" + args.xms + " -Xss" + args.xss + " " + exec_dir + "/F1ALA.jar" + " tree_BFS " + \
+        args.tree + " " + args.label + " " + " " + args.exploreTreeNodeLimit + " " + args.smallBubbleLimit + " " + args.smallClusterLimit + " " + \
         args.isOutputUnAnnotaionTips + " " + args.output + " " + args.print2screen + " " + args.threads
 
 if args.graft_subtrees:
-    cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " graft_subtrees " + args.tree + " " + \
-        args.subtrees + " " + args.outgroup + " " + args.output + " " + args.print2screen + " " + args.threads
+    cmd = "java -jar -Xmx" + args.xmx + " -Xms" + args.xms + " -Xss" + args.xss + " " + exec_dir + "/F1ALA.jar" + " graft_subtrees " + \
+        args.tree + " " + args.subtrees + " " + args.outgroup + " " + args.output + " " + args.print2screen + " " + args.threads
         
 os.system(cmd)
