@@ -79,7 +79,7 @@ usher -v taxa.vcf -t 81784_removedTree.tree -d ./usher -o ./usher/81784_AddTo_10
 ```
 + The refined tree by UShER is ./usher/final-tree.nh.
 
-## Tree bubbling (to be done)
+## Tree bubbling
 Collapse the tree into multiple clusters based on the ancestal lineage annotation.
 Large clusters (>exploreTreeNodeLimit) will further to stratify into multple bubbles by BFS search.
 Small clusters (<smallClusterLimit) and bubbles (<smallBubbleLimit) will be merged.
@@ -99,7 +99,7 @@ cd /home/ytye/f1ala_github/Benchmark_datasets/100k
 7. num_nodes : number of nodes in the cluster or bubble
 8. nodes : a list of nodes in the cluster or bubble (separated by comma)
 
-## Graft subtrees (to be done)
+## Graft subtrees
 Graft a set of subtrees to a bigtree. Subtrees and the bigtree should have two common samples as anchors.
 One anchor is used for outgroup rooting in all provided subtrees and bigtree.
 The graft method will scale the branch length of subtrees to match the big tree based on the distance of two anchors.
