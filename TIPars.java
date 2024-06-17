@@ -1583,7 +1583,7 @@ public class TIPars {
 					return null;
 				}
 				if (((FlexibleNode) (t.getNode(nodes.get(i).getNumber()))).isRoot()) {
-					System.out.println(sequenceName2 + " original is root");
+					System.out.println(sequenceName2 + " original ");
 					return null;
 				}
 			}
@@ -2952,7 +2952,8 @@ public class TIPars {
 		public ArrayList<String> SampleList = new ArrayList<String>();
 	}
 	
-	public HashMap<FlexibleNode, ScoreAndStringList> annotationStatistics(HashMap<String, ArrayList<String>> clade2samples, HashMap<FlexibleNode, String> assignmentNode2Clade, HashMap<String, FlexibleNode> seqName2node, HashSet<String> taxaNames, boolean printDisInfoOnScreen, boolean output_CollapsedTree_ConsistentTree) {
+	public HashMap<FlexibleNode, ScoreAndStringList> annotationStatistics(HashMap<String, ArrayList<String>> clade2samples, HashMap<FlexibleNode, String> assignmentNode2Clade, 
+			HashMap<String, FlexibleNode> seqName2node, HashSet<String> taxaNames, boolean printDisInfoOnScreen, boolean output_CollapsedTree, boolean output_ConsistentTree) {
 		///statistic
 		int truePossitive = 0;
 		int assignedSamples = 0;
@@ -3084,11 +3085,11 @@ public class TIPars {
 		}
 		
 		//write out the consistent label tree and inconsistent samples
-		if(output_CollapsedTree_ConsistentTree)
+		if(output_ConsistentTree)
 			getConsistentLabelTree(clade2samples, printDisInfoOnScreen, assignmentNode2Clade);
 		
 		//write out the annotation collapsed tree
-		if(output_CollapsedTree_ConsistentTree)
+		if(output_CollapsedTree)
 			getCollapsedTree(assignmentNode2Clade);
 		
 		return assignedNode2Samples;	
@@ -3751,6 +3752,8 @@ public class TIPars {
 			
 			//do sth
 			GraftSubtreesBy2Anchors(subtree, subtree_anchor_node, subtree_outgroup_node, tree_anchor_node, tree_outgroup_node);
+			
+			if(i % 10 == 9) System.gc();
 		}
 		
 		FlexibleNode tree_root = (FlexibleNode) mytree.getRoot();
@@ -4954,12 +4957,16 @@ public class TIPars {
 				fscore_min = Double.parseDouble(args[3]);
 			}
 			
-			
+			boolean output_CollapsedTree = false;
+			boolean output_ConsistentTree = false;
 			if(otype.equals("annotation_details"))
 			{
 				inqfn = args[2]; //clade2samples, the annotation table
 				fscore_min = 0;
 				annotation_assignment = args[3]; //annotation_assignment file
+				
+				output_CollapsedTree = Boolean.parseBoolean(args[4]);
+				output_ConsistentTree = Boolean.parseBoolean(args[5]);
 			}
 			
 			if(otype.equals("refinement") || otype.equals("refinement_from_annotation"))
@@ -4989,7 +4996,12 @@ public class TIPars {
 				inqfn = args[2]; //a tsv file contains subtree file and anchor seq_name
 				outgroup_name = args[3]; //a string as the outgroup name
 			}
-
+			
+			if(otype.equals("prune_tips"))
+			{
+				inqfn = args[2]; //a file with one column for all retained tips name
+			}
+			
 			if (otype.equals("insertion") || otype.equals("placement") || otype.equals("refinement") || otype.equals("refinement_from_annotation"))
 			{
 				aa_flag = Boolean.parseBoolean(args[args.length - 5]);
@@ -5072,6 +5084,12 @@ public class TIPars {
 			if (otype.equals("graft_subtrees"))
 			{
 				subtreeMetaList = readSubTreeFileAndAnchor(inqfn);
+			}
+			
+			HashSet<String> retainTipList = null;
+			if (otype.equals("prune_tips"))
+			{
+				retainTipList = new HashSet<String>(readSeqName(inqfn));
 			}
 			
 			long startTime2 = System.currentTimeMillis();
@@ -5295,8 +5313,7 @@ public class TIPars {
 				System.out.println("TreeFile: " + intfn);
 	            System.out.println("LabelFile: " + inqfn);
 	            System.out.println("AnnotationFile: " + annotation_assignment);
-
-				HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples = myAdd.annotationStatistics(clade2samples, assignmentNode2Clade, seqName2node, taxaNames, printDisInfoOnScreen, true);
+				HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples = myAdd.annotationStatistics(clade2samples, assignmentNode2Clade, seqName2node, taxaNames, printDisInfoOnScreen, output_CollapsedTree, output_ConsistentTree);
 				writeAssignCladeAndTaxa(outfn, assignmentNode2Clade, assignedNode2Samples);
 				System.out.println("INFO: write annotation details to file " + outfn);
 				
@@ -5345,7 +5362,7 @@ public class TIPars {
 	            		System.out.println("WARNNING: can not find assigned node " + entry.getKey());
 	            }
 	            
-	            HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples = myAdd.annotationStatistics(clade2samples, assignmentNode2Clade, seqName2node, taxaNames, printDisInfoOnScreen, false);
+	            HashMap<FlexibleNode, ScoreAndStringList> assignedNode2Samples = myAdd.annotationStatistics(clade2samples, assignmentNode2Clade, seqName2node, taxaNames, printDisInfoOnScreen, false, false);
 	            HashMap<FlexibleNode, HashMap<String, HashSet<String>>> stratification = stratifyTree(tree, assignedNode2Samples, exploreTreeNodeLimit, smallBubbleLimit, smallClusterLimit, seqName2node);
 	            if(isOutputUnAnnotaionTips)
 	            {
@@ -5362,7 +5379,24 @@ public class TIPars {
 				GraftSubtrees(subtreeMetaList, outgroup_name, printDisInfoOnScreen);
 				outtree = mytree;
 			}
-			
+			else if (otype.equals("prune_tips"))
+			{
+				System.out.println("TreeFile: " + intfn);
+				System.out.println("RetainTipsFile: " + inqfn);
+				System.out.println("Number of tips in tree: " + tree.getExternalNodeCount());
+				ArrayList<FlexibleNode> removeNodes = new ArrayList<FlexibleNode>();
+				for (int i = 0; i < tree.getExternalNodeCount(); i++) {
+					FlexibleNode n = (FlexibleNode) tree.getExternalNode(i);
+					String sequenceName = n.getTaxon().getId();
+					if (!retainTipList.contains(sequenceName)) 
+					{
+						removeNodes.add(n);
+						if (printDisInfoOnScreen) System.out.println("remove tip from tree " + sequenceName);
+					} 
+					outtree = removeTaxonReturnTree((FlexibleTree) tree, removeNodes);
+				}
+				System.out.println("Number of tips in pruned tree: " + outtree.getExternalNodeCount());
+			}
 			long endTime2 = System.currentTimeMillis();
 			long totalTime2 = endTime2 - startTime2;
 			
