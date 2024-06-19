@@ -110,6 +110,14 @@ cd /home/ytye/f1ala_github/Benchmark_datasets/subtrees
 /home/ytye/f1ala_github/f1ala --graft_subtrees -t bigtree.nwk --subtrees subtrees.tsv --outgroup A --output merge.nwk --print2screen true
 ```
 
+## Prune tips
+Prune a set of tips from a tree by given those you want to retain in an input file.
+```bash
+cd /home/ytye/f1ala_github/Benchmark_datasets/subtrees
+/home/ytye/f1ala_github/f1ala --prune_tips -t bigtree.nwk --retain_tips <retrin_tips.tsv> --output pruned.nwk --print2screen true
+```
+
+
 # How to Cite
 
 
