@@ -77,7 +77,7 @@ if args.annotation:
         
 if args.annotation_details:
     cmd = "java -jar -Xmx" + args.xmx + " " + exec_dir + "/F1ALA.jar" + " annotation_details " + \
-        args.tree + " " + args.label + " " + args.assignment + " " + args.collapsedTree + " " + args.consistentTree + " " +
+        args.tree + " " + args.label + " " + args.assignment + " " + args.collapsedTree + " " + args.consistentTree + " " + \
         args.output + " " + args.print2screen + " " + args.threads
         
 if args.refinement:
