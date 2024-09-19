@@ -119,7 +119,7 @@ cd /home/ytye/f1ala_github/Benchmark_datasets/subtrees
 
 
 # How to Cite
-
+Yongtao Ye, Marcus H Shum, Isaac Wu, Carlos Chau, Ningqi Zhao, David K Smith, Joseph T Wu, Tommy T Lam, F1ALA: ultrafast and memory-efficient ancestral lineage annotation applied to the huge SARS-CoV-2 phylogeny, Virus Evolution, Volume 10, Issue 1, 2024, veae056, https://doi.org/10.1093/ve/veae056
 
 
 # Acknowledgements
