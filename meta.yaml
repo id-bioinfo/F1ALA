@@ -13,7 +13,7 @@ package:
   name: f1ala
   version: '1.0'
 source:
-  path: /mnt/c/Users/isaac/Documents/F1ALA
+  path: ./
 build:
   number: '6'
   script:
